@@ -44,7 +44,7 @@ npm run lint
 ```
 
 
-
+```
 movies/
 │
 ├── public/                 # File tĩnh (favicon, images, manifest...)
@@ -88,8 +88,8 @@ movies/
 ├── vite.config.js          # Cấu hình build của Vite
 │
 └── README.md               # Tài liệu mô tả project
-
-
+```
+```
 Mô tả các thành phần chính
 components/
 
