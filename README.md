@@ -90,7 +90,7 @@ movies/
 └── README.md               # Tài liệu mô tả project
 ```
 ```
-Mô tả các thành phần chính
+## Mô tả các thành phần chính
 components/
 
 Chứa các UI component tái sử dụng nhiều lần.
