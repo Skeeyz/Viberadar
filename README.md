@@ -93,7 +93,7 @@ movies/
 # Mô tả các thành phần chính
 components/
 
-## Chứa các UI component tái sử dụng nhiều lần.
+Chứa các UI component tái sử dụng nhiều lần.
 
 Ví dụ:
 
@@ -105,7 +105,7 @@ Ví dụ:
 
 views/
 
-Chứa các trang chính của ứng dụng (page-level component).
+ Chứa các trang chính của ứng dụng (page-level component).
 
 Ví dụ:
 
@@ -158,8 +158,9 @@ Ví dụ:
 Header
 Main Content
 Footer
-Công nghệ sử dụng trong project
 ```
+## Công nghệ sử dụng trong project
+
 - Vue.js (Frontend Framework)
 
 - Vite (Build Tool)
