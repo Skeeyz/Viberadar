@@ -89,19 +89,19 @@ movies/
 │
 └── README.md               # Tài liệu mô tả project
 ```
-```
-## Mô tả các thành phần chính
+
+# Mô tả các thành phần chính
 components/
 
-Chứa các UI component tái sử dụng nhiều lần.
+## Chứa các UI component tái sử dụng nhiều lần.
 
 Ví dụ:
 
-MovieCard
+- MovieCard
 
-Navbar
+- Navbar
 
-Footer
+- Footer
 
 views/
 
@@ -109,11 +109,11 @@ Chứa các trang chính của ứng dụng (page-level component).
 
 Ví dụ:
 
-Trang chủ
+- Trang chủ
 
-Trang danh sách phim
+- Trang danh sách phim
 
-Trang chi tiết phim
+- Trang chi tiết phim
 
 router/
 
@@ -121,20 +121,22 @@ Cấu hình điều hướng trang bằng Vue Router.
 
 Ví dụ:
 
+```sh
 / -> Home
 /movies -> MovieList
 /movie/:id -> MovieDetail
 stores/
+```
 
 Quản lý state toàn cục của ứng dụng bằng Pinia.
 
 Ví dụ:
 
-danh sách phim
+- danh sách phim
 
-phim đang chọn
+- phim đang chọn
 
-trạng thái loading
+- trạng thái loading
 
 services/
 
@@ -142,24 +144,26 @@ Chứa logic gọi API.
 
 Ví dụ:
 
+```sh
 getMovies()
 getMovieDetail()
 searchMovies()
 layouts/
+```
 
 Chứa layout chung của website.
 
 Ví dụ:
-
+```sh
 Header
 Main Content
 Footer
 Công nghệ sử dụng trong project
+```
+- Vue.js (Frontend Framework)
 
-Vue.js (Frontend Framework)
+- Vite (Build Tool)
 
-Vite (Build Tool)
+- Vue Router (Routing)
 
-Vue Router (Routing)
-
-Pinia (State Management)
+- Pinia (State Management)
