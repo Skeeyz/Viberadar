@@ -1,8 +1,8 @@
 <template>
     <div class="movie-card">
       <div class="poster-container">
-        <img 
-          :src="movie.poster" 
+        <img
+          :src="movie.poster"
           :alt="movie.title"
           class="poster-image"
         />
@@ -14,42 +14,43 @@
           </button>
         </div>
       </div>
-      
+
       <div class="content">
         <h3 class="title">{{ movie.title }}</h3>
-        
+
         <div class="meta">
           <span class="year">{{ movie.year }}</span>
           <span class="rating">⭐ {{ movie.rating }}</span>
         </div>
-        
+
         <p class="description">{{ movie.description }}</p>
-        
-        
+
+
         <div class="genres">
-          <span 
-            v-for="genre in movie.genres" 
+          <span
+            v-for="genre in movie.genres"
             :key="genre"
             class="genre-tag"
           >
             {{ genre }}
           </span>
         </div>
-        
+
         <button class="btn-watch">Watch Now</button>
         <button class="btn-reaction" @click="toggleFavorite">
   <i :class="isFavorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
 </button>
-        
+
 
       </div>
     </div>
   </template>
-  
+
   <script setup lang="ts">
 import { ref } from "vue"
 
 interface Movie {
+  id: number
   title: string
   poster: string
   year: number
@@ -57,10 +58,14 @@ interface Movie {
   description: string
   genres: string[]
 }
+defineOptions({
+  name: "MovieCard"
+})
 
 defineProps<{
   movie: Movie
 }>()
+
 
 const isFavorite = ref(false)
 
@@ -69,43 +74,46 @@ const toggleFavorite = () => {
 }
 </script>
 
-  
+
   <style scoped>
   .movie-card {
   width: 100%;
-  max-width: 280px;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border-radius: 12px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
 }
-  
+
   .movie-card:hover {
     transform: translateY(-8px);
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
   }
-  
+
   .poster-container {
     position: relative;
     width: 100%;
-    height: 400px;
+    height: 280px;
     overflow: hidden;
     background: #0f0f0f;
+
+
   }
-  
+
   .poster-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
   }
-  
+
   .movie-card:hover .poster-image {
     transform: scale(1.05);
   }
-  
+
   .overlay {
     position: absolute;
     top: 0;
@@ -119,11 +127,11 @@ const toggleFavorite = () => {
     opacity: 0;
     transition: opacity 0.3s ease;
   }
-  
+
   .movie-card:hover .overlay {
     opacity: 1;
   }
-  
+
   .play-button {
     width: 64px;
     height: 64px;
@@ -137,45 +145,47 @@ const toggleFavorite = () => {
     cursor: pointer;
     transition: background 0.3s ease, transform 0.3s ease;
   }
-  
+
   .play-button:hover {
     background: rgba(255, 0, 68, 1);
     transform: scale(1.1);
   }
-  
+
   .content {
-    padding: 20px;
+    padding: 15px;
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .title {
     font-size: 18px;
     font-weight: bold;
     color: #ffffff;
     margin: 0;
     line-height: 1.3;
+    text-overflow: ellipsis;
   }
-  
+
   .meta {
     display: flex;
     gap: 12px;
     font-size: 13px;
     color: #b0b0b0;
   }
-  
+
   .year {
     background: rgba(255, 0, 68, 0.2);
     padding: 2px 8px;
     border-radius: 4px;
   }
-  
+
   .rating {
     color: #ffd700;
     font-weight: 600;
   }
-  
+
   .description {
     font-size: 13px;
     color: #a0a0a0;
@@ -186,13 +196,13 @@ const toggleFavorite = () => {
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  
+
   .genres {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
   }
-  
+
   .genre-tag {
     font-size: 11px;
     background: rgba(255, 0, 68, 0.2);
@@ -212,7 +222,7 @@ const toggleFavorite = () => {
 .btn-reaction:hover {
   color: red;
 }
-  
+
   .btn-watch {
     width: 100%;
     padding: 12px 16px;
@@ -226,12 +236,12 @@ const toggleFavorite = () => {
     transition: opacity 0.3s ease, transform 0.2s ease;
     margin-top: 8px;
   }
-  
+
   .btn-watch:hover {
     opacity: 0.9;
     transform: scale(1.02);
   }
-  
+
   .btn-watch:active {
     transform: scale(0.98);
   }
@@ -255,6 +265,5 @@ const toggleFavorite = () => {
 .btn-favorite:hover {
   color: red;
 }
-  
+
   </style>
-  
