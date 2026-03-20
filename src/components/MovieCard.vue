@@ -76,7 +76,7 @@ const toggleFavorite = () => {
 
 
   <style scoped>
-  .movie-card {
+  .movie-card { 
   width: 100%;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border-radius: 12px;

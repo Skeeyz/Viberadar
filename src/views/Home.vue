@@ -144,10 +144,68 @@ const movies: Movie[] = [
   margin-bottom: 20px;
 }
 </style> -->
-<template>
+<!-- <template>
   <SearchBar />
 </template>
 
 <script setup>
 import SearchBar from '@/components/SearchBar.vue';
+</script> -->
+<template>
+  <div class="home">
+    <!-- Title -->
+    <h1 class="title">Home Page</h1>
+    <p class="subtitle">Test Application Layout</p>
+
+    <!-- Demo Content -->
+    <div class="grid">
+      <div class="card" v-for="i in 30" :key="i">
+        <h3>Card {{ i }}</h3>
+        <p>This is a sample content to test layout spacing.</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+
 </script>
+
+<style scoped>
+.home {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Title */
+.title {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 24px;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* Card */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+</style>

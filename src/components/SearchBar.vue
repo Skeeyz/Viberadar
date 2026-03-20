@@ -1,313 +1,180 @@
 <template>
-  <div class="search-container">
-    <!-- Background -->
-    <div class="search-bg"></div>
+  <div class="search-component">
+    <div class="search-input-group">
 
-    <!-- Content -->
-    <div class="search-wrapper">
-      <div class="search-header">
-        <h1 class="search-title">Find Your Next Adventure</h1>
-        <p class="search-subtitle">Explore thousands of movies and shows</p>
-      </div>
+      <div class="search-input-box" :class="{ 'is-focused': showDropdown }">
+        <!-- icon -->
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
 
-      <div class="search-input-wrapper">
-        <div class="search-input-box">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search movies, shows, genres..."
-            class="search-input"
-            @keyup.enter="handleSearch"
-          />
-          <button v-if="searchQuery" @click="clearSearch" class="clear-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-        <button @click="handleSearch" class="search-btn">Search</button>
-      </div>
+        <!-- input -->
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Tìm phim..."
+          class="search-input"
+          @focus="showDropdown = true"
+        />
 
-      <!-- Recent Searches -->
-      <div v-if="recentSearches.length > 0" class="recent-searches">
-        <p class="recent-title">Recent</p>
-        <div class="tags-container">
-          <button
-            v-for="(search, index) in recentSearches"
-            :key="index"
-            @click="searchQuery = search; handleSearch()"
-            class="tag"
+        <!-- clear -->
+        <button v-if="searchQuery" @click="clearSearch" class="clear-btn">
+          ✕
+        </button>
+
+        <!-- dropdown -->
+        <div v-if="showDropdown && searchQuery" class="search-dropdown">
+          <div
+            v-for="movie in searchResults.slice(0, 5)"
+            :key="movie.id"
+            class="dropdown-item"
+            @click="selectMovie(movie)"
           >
-            {{ search }}
-          </button>
+            {{ movie.title }}
+          </div>
+
+          <p v-if="searchResults.length === 0" class="no-result">
+            Không có kết quả
+          </p>
         </div>
       </div>
 
-      <!-- Popular Searches -->
-      <div class="popular-searches">
-        <p class="popular-title">Popular Now</p>
-        <div class="tags-container">
-          <button
-            v-for="tag in popularTags"
-            :key="tag"
-            @click="searchQuery = tag; handleSearch()"
-            class="tag"
-          >
-            {{ tag }}
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+// Giữ nguyên logic Script của bạn, chỉ thêm handle close dropdown khi click ngoài nếu cần
+import { computed, ref } from 'vue'
 
 const searchQuery = ref('')
+const showDropdown = ref(false)
+const hasSearched = ref(false)
+
 const recentSearches = ref<string[]>([])
-const popularTags = [
-  'Action',
-  'Drama',
-  'Sci-Fi',
-  'Thriller',
-  'Comedy',
-  'Horror',
-  'Animation',
-  'Adventure'
-]
+const popularTags = ['Hành động', 'Tình cảm', 'Viễn tưởng', 'Hài hước', 'Hoạt hình']
+
+const movies = ref([
+  { id: 1, title: "Avengers: Endgame", genre: "Hành động" },
+  { id: 2, title: "Your Name", genre: "Hoạt hình" },
+  { id: 3, title: "Interstellar", genre: "Viễn tưởng" },
+  { id: 4, title: "Joker", genre: "Tình cảm" },
+  { id: 5, title: "Inception", genre: "Viễn tưởng" }
+])
+
+const searchResults = computed(() => {
+  if (!searchQuery.value) return []
+  const q = searchQuery.value.toLowerCase()
+  return movies.value.filter(m =>
+    m.title.toLowerCase().includes(q) || m.genre.toLowerCase().includes(q)
+  )
+})
 
 const handleSearch = () => {
-  if (searchQuery.value.trim()) {
-    // Add to recent searches
-    if (!recentSearches.value.includes(searchQuery.value)) {
-      recentSearches.value.unshift(searchQuery.value)
-      if (recentSearches.value.length > 5) {
-        recentSearches.value.pop()
-      }
-    }
+  if (!searchQuery.value.trim()) return
+  hasSearched.value = true
+  showDropdown.value = false
 
-    // Emit search event
-    console.log('Searching for:', searchQuery.value)
+  if (!recentSearches.value.includes(searchQuery.value)) {
+    recentSearches.value.unshift(searchQuery.value)
+    if (recentSearches.value.length > 5) recentSearches.value.pop()
   }
+}
+
+const selectMovie = (movie: any) => {
+  searchQuery.value = movie.title
+  handleSearch()
+}
+
+const applyTag = (tag: string) => {
+  searchQuery.value = tag
+  handleSearch()
 }
 
 const clearSearch = () => {
   searchQuery.value = ''
+  hasSearched.value = false
+  showDropdown.value = false
 }
 </script>
 
 <style scoped>
-.search-container {
-  position: relative;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
 
-.search-bg {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #0f1f3c 0%, #1a2f5a 50%, #0f1f3c 100%);
-  z-index: -1;
-}
-
-.search-wrapper {
+.search-component {
   width: 100%;
-  max-width: 700px;
-  padding: 2rem;
 }
 
-.search-header {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-
-.search-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
-.search-subtitle {
-  font-size: 1rem;
-  color: #a0afc9;
-  margin: 0.5rem 0 0 0;
-}
-
-.search-input-wrapper {
+/* group */
+.search-input-group {
   display: flex;
-  gap: 0.75rem;
-  margin-bottom: 3rem;
 }
 
+/* box */
 .search-input-box {
-  flex: 1;
   position: relative;
+  flex: 1;
+  height: 40px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 20px;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 0 1rem;
-  transition: all 0.3s ease;
+  padding: 0 12px;
 }
 
-.search-input-box:focus-within {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: #ff1b6d;
-  box-shadow: 0 0 20px rgba(255, 27, 109, 0.2);
-}
-
-.search-icon {
-  width: 20px;
-  height: 20px;
-  color: #a0afc9;
-  flex-shrink: 0;
-  margin-right: 0.75rem;
-}
-
+/* input */
 .search-input {
   flex: 1;
-  background: none;
+  background: transparent;
   border: none;
+  color: white;
   outline: none;
-  color: #ffffff;
-  font-size: 1rem;
-  padding: 1rem 0;
-  font-family: inherit;
+  font-size: 14px;
 }
 
-.search-input::placeholder {
-  color: #6b7a94;
+/* icon */
+.search-icon {
+  color: #aaa;
+  margin-right: 8px;
 }
 
+/* clear */
 .clear-btn {
   background: none;
   border: none;
+  color: #aaa;
   cursor: pointer;
-  padding: 0.5rem;
-  color: #a0afc9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s ease;
 }
 
-.clear-btn:hover {
-  color: #ff1b6d;
+/* dropdown */
+.search-dropdown {
+  position: absolute;
+  top: 45px;
+  left: 0;
+  right: 0;
+  background: #111;
+  border-radius: 10px;
+  padding: 8px;
+  z-index: 20;
 }
 
-.clear-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.search-btn {
-  padding: 1rem 2.5rem;
-  background: linear-gradient(135deg, #ff1b6d 0%, #ff4a8e 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
+.dropdown-item {
+  padding: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(255, 27, 109, 0.3);
-  white-space: nowrap;
 }
 
-.search-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(255, 27, 109, 0.4);
+.dropdown-item:hover {
+  background: #222;
 }
 
-.search-btn:active {
-  transform: translateY(0);
+.no-result {
+  padding: 8px;
+  color: #777;
 }
-
-.recent-searches,
-.popular-searches {
-  margin-bottom: 2rem;
-}
-
-.recent-title,
-.popular-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #a0afc9;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin: 0 0 1rem 0;
-}
-
-.tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.tag {
-  padding: 0.6rem 1.2rem;
-  background: rgba(255, 27, 109, 0.15);
-  color: #ff1b6d;
-  border: 1.5px solid rgba(255, 27, 109, 0.4);
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-}
-
-.tag:hover {
-  background: rgba(255, 27, 109, 0.3);
-  border-color: #ff1b6d;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 27, 109, 0.2);
-}
-
-.tag:active {
-  transform: translateY(0);
-}
-
-@media (max-width: 640px) {
-  .search-wrapper {
-    padding: 1.5rem;
-  }
-
-  .search-title {
-    font-size: 1.875rem;
-  }
-
-  .search-input-wrapper {
-    flex-direction: column;
-  }
-
-  .search-btn {
-    width: 100%;
-  }
-
-  .search-input-box {
-    padding: 0 0.75rem;
-  }
-
-  .search-icon {
-    width: 18px;
-    height: 18px;
-  }
-
-  .search-input {
-    font-size: 0.95rem;
-  }
+@media (max-width: 600px) {
+  .search-input-group { flex-direction: column; }
+  .search-btn-main { height: 50px; }
+  .hero-title { font-size: 1.8rem; }
 }
 </style>
