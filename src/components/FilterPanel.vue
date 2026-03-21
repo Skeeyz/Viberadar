@@ -6,17 +6,17 @@
     <div class="filter-section">
       <button class="section-header" @click="toggleSection('genre')">
         <span>Thể loại</span>
-        <span :class="['arrow', { active: expandedSections.genre }]">⌄</span>
+        <span :class="['arrow', { active: expandedSections.genre }]"><ChevronDown class = "icon" /></span>
       </button>
 
       <div v-if="expandedSections.genre" class="section-content">
         <label v-for="genre in genres" :key="genre" class="checkbox-item">
           <input
             type="checkbox"
-            :checked="filters.genre.includes(genre)"
+            v-bind:checked="filters.genre.includes(genre)"
             @change="toggleFilter('genre', genre)"
           />
-          <span>{{ genre }}</span>
+                    <span>{{ genre }}</span>
         </label>
       </div>
     </div>
@@ -25,7 +25,7 @@
     <div class="filter-section">
       <button class="section-header" @click="toggleSection('year')">
         <span>Năm</span>
-        <span :class="['arrow', { active: expandedSections.year }]">⌄</span>
+        <span :class="['arrow', { active: expandedSections.year }]"><ChevronDown class = "icon" /></span>
       </button>
 
       <div v-if="expandedSections.year" class="section-content">
@@ -52,7 +52,7 @@
 <div class="filter-section">
   <button class="section-header" @click="toggleSection('rating')">
     <span>Đánh giá</span>
-    <span :class="['arrow', { active: expandedSections.rating }]">⌄</span>
+    <span :class="['arrow', { active: expandedSections.rating }]"><ChevronDown class = "icon" /></span>
   </button>
 
   <div v-if="expandedSections.rating" class="section-content">
@@ -78,7 +78,17 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { ChevronDown } from 'lucide-vue-next';
+import { reactive, ref } from 'vue';
+
+type SectionKey = 'genre' | 'year' | 'rating'
+
+interface FiltersState {
+  genre: string[]
+  yearRange: [number, number]
+  selectedYear: number | null
+  rating: number[]
+}
 
 // UI state
 const expandedSections = ref({
@@ -93,21 +103,21 @@ const ratings = [1,2,3,4,5]
 const yearOptions = [2010, 2015, 2020, 2023]
 
 // Filters
-const filters = reactive({
-  genre : [] as string[],
+const filters = reactive<FiltersState>({
+  genre: [],
   yearRange: [2000, 2024],
-  selectedYear: null as number | null,
-  rating: [] as number[],
+  selectedYear: null,
+  rating: [],
 })
 
 // Toggle section
-const toggleSection = (key: string) => {
+const toggleSection = (key: SectionKey) => {
   expandedSections.value[key] = !expandedSections.value[key]
 }
 
 
 // Toggle checkbox
-const toggleFilter = (type: 'genre' , value: string) => {
+const toggleFilter = (type: 'genre', value: string) => {
   const arr = filters[type]
   const index = arr.indexOf(value)
 
@@ -115,7 +125,7 @@ const toggleFilter = (type: 'genre' , value: string) => {
   else arr.push(value)
 }
 
-const changeRating = (type: 'rating' , value: number) => {
+const changeRating = (type: 'rating', value: number) => {
   const arr = filters[type]
   const index = arr.indexOf(value)
 
@@ -152,11 +162,13 @@ const applyFilters = () => {
 // Reset
 const resetFilters = () => {
   filters.genre = []
-  filters.rating = [0,6]
+  filters.rating = []
   filters.yearRange = [2000, 2024]
   filters.selectedYear = null
 }
 </script>
+
+
 <style  scoped>
 .filter-container {
   width: 320px;
@@ -306,4 +318,3 @@ const resetFilters = () => {
   transform: scale(1.2);
 }
 </style>
-

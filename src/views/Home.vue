@@ -1,4 +1,4 @@
-<!-- <template>
+ <!-- <template>
   <MovieCard :movie="movieData" />
 </template>
 
@@ -16,7 +16,7 @@ const movieData = {
   description: 'Two imprisoned men bond over a number of years...',
   genres: ['Drama', 'Crime']
 }
-</script> -->
+</script>  -->
 <!-- <template>
   <SkeletonCard />
 </template>
@@ -27,8 +27,9 @@ defineOptions({
 })
 
 import SkeletonCard from '@/components/SkeletonCard.vue'
-</script> -->
-<!-- <template>
+</script>
+-->
+<template>
   <div class="home">
     <h2 class="section-title">Trending Movies</h2>
 
@@ -36,7 +37,7 @@ import SkeletonCard from '@/components/SkeletonCard.vue'
   </div>
 </template>
 
-<script setup lang="ts">
+ <script setup lang="ts">
 import MovieGrid from "@/components/MovieGrid.vue"
 
 interface Movie {
@@ -129,7 +130,7 @@ const movies: Movie[] = [
 ]
 </script>
 
-<style scoped>
+ <style scoped>
 .home{
   padding: 30px 20px;
 }
@@ -143,7 +144,7 @@ const movies: Movie[] = [
   font-size: 24px;
   margin-bottom: 20px;
 }
-</style> -->
+</style>
 <!-- <template>
   <SearchBar />
 </template>
@@ -151,13 +152,11 @@ const movies: Movie[] = [
 <script setup>
 import SearchBar from '@/components/SearchBar.vue';
 </script> -->
-<template>
+<!-- <template>
   <div class="home">
-    <!-- Title -->
     <h1 class="title">Home Page</h1>
     <p class="subtitle">Test Application Layout</p>
 
-    <!-- Demo Content -->
     <div class="grid">
       <div class="card" v-for="i in 30" :key="i">
         <h3>Card {{ i }}</h3>
@@ -177,7 +176,6 @@ import SearchBar from '@/components/SearchBar.vue';
   margin: 0 auto;
 }
 
-/* Title */
 .title {
   font-size: 32px;
   font-weight: bold;
@@ -189,14 +187,12 @@ import SearchBar from '@/components/SearchBar.vue';
   margin-bottom: 24px;
 }
 
-/* Grid */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
 }
 
-/* Card */
 .card {
   background: #fff;
   border-radius: 12px;
@@ -208,4 +204,4 @@ import SearchBar from '@/components/SearchBar.vue';
 .card:hover {
   transform: translateY(-5px);
 }
-</style>
+</style> -->
