@@ -230,6 +230,15 @@ const resetFilters = () => {
   margin-bottom: 8px;
   cursor: pointer;
 }
+.checkbox-item input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.checkbox-item:has(input:checked) {
+  color: #f59e0b;
+
+}
 
 /* Year */
 .year-range {

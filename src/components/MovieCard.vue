@@ -20,7 +20,20 @@
 
         <div class="meta">
           <span class="year">{{ movie.year }}</span>
-          <span class="rating">⭐ {{ movie.rating }}</span>
+          <div class="rating" :aria-label="`Rating: ${movie.rating} out of 10`">
+            <span
+              v-for="star in 5"
+              :key="star"
+              class="rating-star"
+              :class="{ active: star <= getStarCount(movie.rating) }"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52 6.12 20.61l1.12-6.55L2.48 9.42l6.58-.96L12 2.5z"
+                />
+              </svg>
+            </span>
+          </div>
         </div>
 
         <p class="description">{{ movie.description }}</p>
@@ -71,6 +84,10 @@ const isFavorite = ref(false)
 
 const toggleFavorite = () => {
   isFavorite.value = !isFavorite.value
+}
+
+const getStarCount = (rating: number) => {
+  return Math.max(0, Math.min(5, Math.round(rating / 2)))
 }
 </script>
 
@@ -182,8 +199,28 @@ const toggleFavorite = () => {
   }
 
   .rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     color: #ffd700;
     font-weight: 600;
+  }
+
+  .rating-star {
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+    color: rgba(255, 215, 0, 0.28);
+  }
+
+  .rating-star svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+  }
+
+  .rating-star.active {
+    color: #ffd700;
   }
 
   .description {

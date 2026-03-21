@@ -53,7 +53,6 @@ const showDropdown = ref(false)
 const hasSearched = ref(false)
 
 const recentSearches = ref<string[]>([])
-const popularTags = ['Hành động', 'Tình cảm', 'Viễn tưởng', 'Hài hước', 'Hoạt hình']
 
 const movies = ref([
   { id: 1, title: "Avengers: Endgame", genre: "Hành động" },
@@ -87,10 +86,6 @@ const selectMovie = (movie: any) => {
   handleSearch()
 }
 
-const applyTag = (tag: string) => {
-  searchQuery.value = tag
-  handleSearch()
-}
 
 const clearSearch = () => {
   searchQuery.value = ''
