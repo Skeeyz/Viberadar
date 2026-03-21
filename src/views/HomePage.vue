@@ -186,6 +186,7 @@ const movies: Movie[] = [
 .hero-stats {
   display: grid;
   gap: 16px;
+  grid-template-columns: 1fr;
 }
 
 .stat-card {
@@ -229,16 +230,10 @@ const movies: Movie[] = [
   color: #f8fafc;
 }
 
-.section-subtitle {
-  margin: 0;
-  max-width: 420px;
-  color: #94a3b8;
-  line-height: 1.6;
-}
-
 @media (max-width: 900px) {
   .hero {
     grid-template-columns: 1fr;
+    padding: 28px 24px;
   }
 
   .section-heading {
@@ -248,9 +243,49 @@ const movies: Movie[] = [
 }
 
 @media (max-width: 640px) {
+  .home {
+    gap: 24px;
+  }
+
   .hero {
     padding: 24px 20px;
     border-radius: 22px;
+  }
+
+  .hero-title {
+    max-width: none;
+    font-size: clamp(1.75rem, 9vw, 2.4rem);
+  }
+
+  .hero-text {
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .stat-card {
+    min-height: 112px;
+    padding: 20px 18px;
+  }
+
+  .catalog-section {
+    gap: 16px;
+  }
+
+  .section-title {
+    font-size: 1.35rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+
+  .eyebrow,
+  .section-kicker {
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
   }
 }
 </style>

@@ -16,7 +16,21 @@ import Header from '@/components/HeaderMain.vue';
   flex: 1;
   width: min(1280px, calc(100% - 32px));
   margin: 0 auto;
-    padding: 32px 0 48px;
+  padding: 32px 0 48px;
+}
+
+@media (max-width: 900px) {
+  .main-content {
+    width: min(100%, calc(100% - 24px));
+    padding: 24px 0 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    width: min(100%, calc(100% - 16px));
+    padding: 18px 0 32px;
+  }
 }
 </style>
 <template>
