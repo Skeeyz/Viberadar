@@ -1,7 +1,6 @@
 <template>
   <div class="search-component">
-    <div class="search-input-group">
-
+    <form class="search-input-group" @submit.prevent="handleSearch">
       <div class="search-input-box" :class="{ 'is-focused': showDropdown }">
         <!-- icon -->
         <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24">
@@ -19,79 +18,99 @@
         />
 
         <!-- clear -->
-        <button v-if="searchQuery" @click="clearSearch" class="clear-btn">
+        <button v-if="searchQuery" type="button" @click="clearSearch" class="clear-btn">
           ✕
         </button>
 
         <!-- dropdown -->
-        <div v-if="showDropdown && searchQuery" class="search-dropdown">
+        <div v-if="showDropdown && searchQuery.trim()" class="search-dropdown">
           <div
-            v-for="movie in searchResults.slice(0, 5)"
+            v-for="movie in searchResults"
             :key="movie.id"
             class="dropdown-item"
-            @click="selectMovie(movie)"
+            @click="selectMovie(movie.title)"
           >
             {{ movie.title }}
           </div>
 
-          <p v-if="searchResults.length === 0" class="no-result">
+          <p v-if="isSearching" class="no-result">
+            Đang tìm...
+          </p>
+
+          <p v-else-if="searchResults.length === 0" class="no-result">
             Không có kết quả
           </p>
         </div>
       </div>
 
-    </div>
+      <button type="submit" class="search-btn-main">Tìm</button>
+    </form>
   </div>
 </template>
 
 <script setup lang="ts">
-// Giữ nguyên logic Script của bạn, chỉ thêm handle close dropdown khi click ngoài nếu cần
-import { computed, ref } from 'vue'
+import { searchMovies } from '@/services/movieService'
+import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
+interface Movie {
+  id: number
+  title: string
+  poster: string
+  year: number
+  rating: number
+  description: string
+  genres: string[]
+}
 const searchQuery = ref('')
 const showDropdown = ref(false)
-const hasSearched = ref(false)
+const searchResults = ref<Movie[]>([])
+const isSearching = ref(false)
+const router = useRouter()
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-const recentSearches = ref<string[]>([])
-
-const movies = ref([
-  { id: 1, title: "Avengers: Endgame", genre: "Hành động" },
-  { id: 2, title: "Your Name", genre: "Hoạt hình" },
-  { id: 3, title: "Interstellar", genre: "Viễn tưởng" },
-  { id: 4, title: "Joker", genre: "Tình cảm" },
-  { id: 5, title: "Inception", genre: "Viễn tưởng" }
-])
-
-const searchResults = computed(() => {
-  if (!searchQuery.value) return []
-  const q = searchQuery.value.toLowerCase()
-  return movies.value.filter(m =>
-    m.title.toLowerCase().includes(q) || m.genre.toLowerCase().includes(q)
-  )
-})
-
-const handleSearch = () => {
-  if (!searchQuery.value.trim()) return
-  hasSearched.value = true
-  showDropdown.value = false
-
-  if (!recentSearches.value.includes(searchQuery.value)) {
-    recentSearches.value.unshift(searchQuery.value)
-    if (recentSearches.value.length > 5) recentSearches.value.pop()
+const handleSearch = async () => {
+  const query = searchQuery.value.trim()
+  if (query) {
+    showDropdown.value = false
+    await router.push({ path: '/search', query: { q: query } })
   }
 }
 
-const selectMovie = (movie: any) => {
-  searchQuery.value = movie.title
-  handleSearch()
-}
-
-
 const clearSearch = () => {
   searchQuery.value = ''
-  hasSearched.value = false
   showDropdown.value = false
+  searchResults.value = []
 }
+
+const selectMovie = async (title: string) => {
+  searchQuery.value = title
+  await handleSearch()
+}
+
+watch(searchQuery, (value) => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+
+  const query = value.trim()
+  if (!query) {
+    searchResults.value = []
+    isSearching.value = false
+    return
+  }
+
+  searchTimeout = setTimeout(async () => {
+    isSearching.value = true
+
+    try {
+      searchResults.value = (await searchMovies(query)).slice(0, 5)
+    } catch (error) {
+      console.error('Failed to fetch search suggestions:', error)
+      searchResults.value = []
+    } finally {
+      isSearching.value = false
+    }
+  }, 300)
+})
 </script>
 
 <style scoped>
@@ -104,6 +123,7 @@ const clearSearch = () => {
 /* group */
 .search-input-group {
   display: flex;
+  gap: 12px;
 }
 
 /* box */
@@ -142,6 +162,23 @@ const clearSearch = () => {
   cursor: pointer;
 }
 
+.search-btn-main {
+  min-width: 88px;
+  height: 40px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  color: #08111f;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.search-btn-main:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
 /* dropdown */
 .search-dropdown {
   position: absolute;
@@ -169,7 +206,10 @@ const clearSearch = () => {
 }
 @media (max-width: 600px) {
   .search-input-group { flex-direction: column; }
-  .search-btn-main { height: 50px; }
+  .search-btn-main {
+    width: 100%;
+    height: 50px;
+  }
   .hero-title { font-size: 1.8rem; }
 }
 </style>

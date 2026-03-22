@@ -30,8 +30,10 @@
         </div>
       </div>
 
-      <MovieGrid :movies="movies" />
-      <SkeletonCard  v-for="i in 4" :key="i" />
+      <div v-if="isLoading" class="skeleton-grid">
+        <SkeletonCard v-for="i in 4" :key="i" />
+      </div>
+      <MovieGrid v-else :movies="movies" />
     </section>
   </div>
 </template>
@@ -39,6 +41,9 @@
  <script setup lang="ts">
 import MovieGrid from "@/components/MovieGrid.vue"
 import SkeletonCard from "@/components/SkeletonCard.vue"
+import { getPopularMovies } from "@/services/movieService"
+import { onMounted, ref } from "vue"
+
 
 interface Movie {
   id: number
@@ -50,93 +55,18 @@ interface Movie {
   genres: string[]
 }
 
-const movies: Movie[] = [
-  {
-    id: 1,
-    title: "Inception",
-    poster: "https://image.tmdb.org/t/p/w500/qmDpIHrmpJINaRKAfWQfftjCdyi.jpg",
-    year: 2010,
-    rating: 10,
-    description: "Dream inside dream",
-    genres: ["Sci-Fi", "Action"]
-  },
-  {
-    id: 2,
-    title: "Interstellar",
-    poster: "https://image.tmdb.org/t/p/w500/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg",
-    year: 2014,
-    rating: 8.6,
-    description: "Space travel",
-    genres: ["Sci-Fi", "Drama"]
-  },
-  {
-    id: 4,
-    title: "The Dark Knight",
-    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    year: 2008,
-    rating: 9.0,
-    description: "Batman vs Joker",
-    genres: ["Action", "Crime"]
-  },
-  {
-    id: 5,
-    title: "The Dark Knight",
-    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    year: 2008,
-    rating: 9.0,
-    description: "Batman vs Joker",
-    genres: ["Action", "Crime"]
-  },
-  {
-    id: 6,
-    title: "The Dark Knight",
-    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    year: 2008,
-    rating: 9.0,
-    description: "Batman vs Joker",
-    genres: ["Action", "Crime"]
-  }
-  ,
-  {
-    id: 7,
-    title: "The Dark Knight",
-    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    year: 2008,
-    rating: 9.0,
-    description: "Batman vs Joker",
-    genres: ["Action", "Crime"]
-  }
-  ,
-  {
-    id: 8,
-    title: "The Dark Knight",
-    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    year: 2008,
-    rating: 9.0,
-    description: "Batman vs Joker",
-    genres: ["Action", "Crime"]
-  }
-  ,
-  {
-    id: 3,
-    title: "The Dark Knight",
-    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    year: 2008,
-    rating: 9.0,
-    description: "Batman vs Joker",
-    genres: ["Action", "Crime"]
-  },
-  {
-    id: 44,
-    title: "The Dark Knight",
-    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    year: 2008,
-    rating: 9.0,
-    description: "Batman vs Joker",
-    genres: ["Action", "Crime"]
-  }
+const movies = ref<Movie[]>([])
+const isLoading = ref(true)
 
-]
+onMounted(async () => {
+  try {
+    movies.value = await getPopularMovies()
+  } catch (error) {
+    console.error("Failed to fetch popular movies:", error)
+  } finally {
+    isLoading.value = false
+  }
+})
 </script>
 
  <style scoped>
@@ -215,6 +145,12 @@ const movies: Movie[] = [
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.skeleton-grid {
+  display: grid;
+  gap: 28px 22px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
 .section-heading {

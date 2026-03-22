@@ -78,10 +78,10 @@ import SearchBar from './SearchBar.vue';
     </div>
 
     <div class="header-bottom">
-  <div class="search-wrapper">
-    <SearchBar />
-  </div>
-</div>
+      <div class="search-wrapper">
+        <SearchBar />
+      </div>
+    </div>
   </header>
 </template>
 
@@ -194,7 +194,6 @@ import SearchBar from './SearchBar.vue';
   cursor: pointer;
 }
 
-/* BOTTOM (SEARCH AREA) */
 .header-bottom {
   padding: 20px 40px 40px;
 }
@@ -204,31 +203,6 @@ import SearchBar from './SearchBar.vue';
   margin: auto;
   width: 100%;
 }
-
-/* Fake search (placeholder) */
-.search-placeholder {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  background: rgba(255,255,255,0.05);
-  padding: 12px;
-  border-radius: 10px;
-}
-
-.type {
-  color: red;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.input-fake {
-  flex: 1;
-  height: 36px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 20px;
-  position: relative;
-}
-
 
 .nav-link {
   display: flex;

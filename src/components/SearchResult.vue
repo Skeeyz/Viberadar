@@ -8,20 +8,31 @@
       </p>
     </div>
 
-    <div v-if="movies.length > 0" class="search-results">
+    <div v-if="isLoading" class="search-results loading-state">
+      Đang tìm phim...
+    </div>
+
+    <div v-else-if="movies.length > 0" class="search-results">
       <MovieGrid :movies="movies" />
     </div>
 
-    <div v-else class="no-results">
+    <div v-else-if="searchKeyword" class="no-results">
       <h2>Không tìm thấy phim phù hợp</h2>
       <p>Hãy thử lại với tên phim khác, thể loại khác hoặc từ khóa ngắn hơn.</p>
+    </div>
+
+    <div v-else class="no-results">
+      <h2>Chưa có từ khóa tìm kiếm</h2>
+      <p>Hãy nhập tên phim ở ô tìm kiếm để xem kết quả.</p>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import MovieGrid from '@/components/MovieGrid.vue'
-import { ref } from 'vue'
+import { searchMovies } from '@/services/movieService'
+import { onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 interface Movie {
   id: number
@@ -33,37 +44,34 @@ interface Movie {
   genres: string[]
 }
 
-const searchKeyword = ref('Inception')
+const route = useRoute()
+const searchKeyword = ref('')
+const movies = ref<Movie[]>([])
+const isLoading = ref(false)
 
-const movies = ref<Movie[]>([
-  {
-    id: 1,
-    title: 'Inception',
-    poster: 'https://image.tmdb.org/t/p/w500/qmDpIHrmpJINaRKAfWQfftjCdyi.jpg',
-    year: 2010,
-    rating: 10,
-    description: 'Dream inside dream',
-    genres: ['Sci-Fi', 'Action'],
-  },
-  {
-    id: 2,
-    title: 'Interstellar',
-    poster: 'https://image.tmdb.org/t/p/w500/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg',
-    year: 2014,
-    rating: 8.6,
-    description: 'Space travel',
-    genres: ['Sci-Fi', 'Drama'],
-  },
-  {
-    id: 3,
-    title: 'The Dark Knight',
-    poster: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
-    year: 2008,
-    rating: 9,
-    description: 'Batman vs Joker',
-    genres: ['Action', 'Crime'],
-  },
-])
+const fetchSearchResults = async () => {
+  const query = String(route.query.q || '').trim()
+  searchKeyword.value = query
+
+  if (!query) {
+    movies.value = []
+    return
+  }
+
+  isLoading.value = true
+
+  try {
+    movies.value = await searchMovies(query)
+  } catch (error) {
+    console.error('Failed to search movies:', error)
+    movies.value = []
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(fetchSearchResults)
+watch(() => route.query.q, fetchSearchResults)
 </script>
 
 <style scoped>
@@ -111,6 +119,11 @@ const movies = ref<Movie[]>([
   padding: 24px;
   background: rgba(15, 23, 42, 0.45);
   border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.loading-state {
+  color: #cbd5e1;
+  text-align: center;
 }
 
 .no-results {
