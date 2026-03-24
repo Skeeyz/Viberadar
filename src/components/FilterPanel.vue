@@ -30,9 +30,7 @@
 
       <div v-if="expandedSections.year" class="section-content">
         <div class="year-range">
-          <button @click="changeYearRange(-1)">←</button>
-          <span>{{ filters.yearRange[0] }} - {{ filters.yearRange[1] }}</span>
-          <button @click="changeYearRange(1)">→</button>
+
         </div>
 
         <div class="year-options">
@@ -72,100 +70,90 @@
     <!-- Buttons -->
     <div class="actions">
       <button class="btn apply" @click="applyFilters">Áp dụng</button>
-      <button class="btn reset" @click="resetFilters">Reset</button>
+      <button class="btn reset" @click="resetFilters">Hoàn Tác</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ChevronDown } from 'lucide-vue-next';
-import { reactive, ref } from 'vue';
+import { reactive } from 'vue';
 
-type SectionKey = 'genre' | 'year' | 'rating'
-
-interface FiltersState {
-  genre: string[]
-  yearRange: [number, number]
-  selectedYear: number | null
-  rating: number[]
+interface FilterState{
+  genre: string[];
+  selectedYear: number | null;
+  rating: number[];
 }
+const props = defineProps<{
+  genres: string[];
+  yearOptions: number[];
+  ratings: number[];
+  initialFilter?: FilterState;
 
-// UI state
-const expandedSections = ref({
+}>();
+const filters = reactive<FilterState>({
+  genre: props.initialFilter?.genre ?? [],
+  selectedYear: props.initialFilter?.selectedYear ?? null,
+  rating: props.initialFilter?.rating ?? []
+});
+const emit = defineEmits<{
+  (event: 'apply', value: FilterState): void
+  (event: 'reset'): void
+}>();
+
+
+const applyFilters = () => {
+  emit('apply', {
+    genre: [...filters.genre],
+    selectedYear: filters.selectedYear,
+    rating: [...filters.rating],
+
+  });
+  console.log('Applied Filters:', {
+    genre: filters.genre,
+    selectedYear: filters.selectedYear,
+    rating: filters.rating
+  });
+};
+const resetFilters = () => {
+  filters.genre = [];
+  filters.selectedYear = null;
+  filters.rating = [];
+  emit('reset');
+};
+const expandedSections = reactive({
   genre: true,
   year: true,
   rating: true
-})
+});
+const toggleSection = (section: string) => {
+  expandedSections[section] = !expandedSections[section];
 
-// Data
-const genres = ['Action', 'Adventure', 'Sci-Fi', 'Thriller']
-const ratings = [1,2,3,4,5]
-const yearOptions = [2010, 2015, 2020, 2023]
-
-// Filters
-const filters = reactive<FiltersState>({
-  genre: [],
-  yearRange: [2000, 2024],
-  selectedYear: null,
-  rating: [],
-})
-
-// Toggle section
-const toggleSection = (key: SectionKey) => {
-  expandedSections.value[key] = !expandedSections.value[key]
 }
-
-
-// Toggle checkbox
-const toggleFilter = (type: 'genre', value: string) => {
-  const arr = filters[type]
-  const index = arr.indexOf(value)
-
-  if (index > -1) arr.splice(index, 1)
-  else arr.push(value)
-}
-
-const changeRating = (type: 'rating', value: number) => {
-  const arr = filters[type]
-  const index = arr.indexOf(value)
-
-  if (index > -1) arr.splice(index, 1)
-  else arr.push(value)
-}
-// Change year range
-const changeYearRange = (direction: number) => {
-  const [start, end] = filters.yearRange
-
-  if (direction === -1 && start > 1990) {
-    filters.yearRange = [start - 10, end - 10]
+const toggleFilter = (type: string, value: any) => {
+  if (type === 'genre') {
+    const index = filters.genre.indexOf(value);
+    if (index > -1) {
+      filters.genre.splice(index, 1);
+    } else {
+      filters.genre.push(value);
+    }
   }
+};
 
-  if (direction === 1 && end < 2034) {
-    filters.yearRange = [start + 10, end + 10]
-  }
-}
-
-// Select year
 const selectYear = (year: number) => {
-  filters.selectedYear =
-    filters.selectedYear === year ? null : year
-}
-
-
-
-
-// Apply
-const applyFilters = () => {
-  console.log('Filters:', filters)
-}
-
-// Reset
-const resetFilters = () => {
-  filters.genre = []
-  filters.rating = []
-  filters.yearRange = [2000, 2024]
-  filters.selectedYear = null
-}
+  filters.selectedYear = year;
+};
+const changeRating = (type: string, value: number) => {
+  if (type === 'rating') {
+    const index = filters.rating.indexOf(value);
+    if (index > -1) {
+      filters.rating.splice(index, 1);
+    } else {
+      filters.rating.push(value);
+    }
+  }
+};
 </script>
 
 

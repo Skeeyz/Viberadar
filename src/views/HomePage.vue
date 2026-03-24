@@ -19,6 +19,14 @@
           <span class="stat-value">5★</span>
           <span class="stat-label">Hiển thị theo sao</span>
         </div>
+        <FilterPanel
+  :genres="genres"
+  :year-options="yearOptions"
+  :ratings="ratings"
+  @apply="handleApplyFilters"
+  @reset="handleResetFilters"
+/>
+
       </div>
     </section>
 
@@ -43,6 +51,7 @@ import MovieGrid from "@/components/MovieGrid.vue"
 import SkeletonCard from "@/components/SkeletonCard.vue"
 import { getPopularMovies } from "@/services/movieService"
 import { onMounted, ref } from "vue"
+import FilterPanel from "@/components/FilterPanel.vue"
 
 
 interface Movie {
@@ -55,18 +64,39 @@ interface Movie {
   genres: string[]
 }
 
+interface FilterState {
+  genre: string[]
+  selectedYear: number | null
+  rating: number[]
+}
+
 const movies = ref<Movie[]>([])
 const isLoading = ref(true)
+const genres = ref<string[]>([])
+const yearOptions = ref<number[]>([])
+const ratings = [1, 2, 3, 4, 5]
 
 onMounted(async () => {
   try {
     movies.value = await getPopularMovies()
+    genres.value = [...new Set(movies.value.flatMap((movie) => movie.genres))].sort()
+    yearOptions.value = [...new Set(movies.value.map((movie) => movie.year))]
+      .filter((year) => year > 0)
+      .sort((a, b) => b - a)
   } catch (error) {
     console.error("Failed to fetch popular movies:", error)
   } finally {
     isLoading.value = false
   }
 })
+const handleApplyFilters = (filters: FilterState) => {
+  console.log('filters from panel:', filters)
+}
+
+const handleResetFilters = () => {
+  console.log('filters reset')
+}
+
 </script>
 
  <style scoped>
