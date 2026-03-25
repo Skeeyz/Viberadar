@@ -1,4 +1,5 @@
 <template>
+<<<<<<< Updated upstream
     <div class="movie-card">
       <div class="poster-container">
         <img
@@ -304,3 +305,10 @@ const getStarCount = (rating: number) => {
 }
 
   </style>
+=======
+  <div class="movie-card">
+    <!-- <img :src="movie.poster" />
+    <h3>{{ movie.title }}</h3> -->
+  </div>
+</template>
+>>>>>>> Stashed changes
