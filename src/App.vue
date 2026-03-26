@@ -1,11 +1,30 @@
-<script setup></script>
+<script setup>
+  import { RouterView } from 'vue-router';
+  import { onMounted } from 'vue';
+  import { useAuthStore } from '@/stores/authStore';
 
+  const authStore = useAuthStore();
+
+  onMounted(async () => {
+    // Chỉ kiểm tra nếu trong máy có sẵn token
+    if (authStore.token) {
+      await authStore.checkAuth();
+    }
+  });
+</script>
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <RouterView />
 </template>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #020617;
+  color: white;
+  font-family: 'Inter', sans-serif;
+}
 
-<style scoped></style>
+#app {
+  min-height: 100vh;
+}
+</style>

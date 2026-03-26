@@ -16,11 +16,14 @@
     "axios": "^1.13.6",
     "pinia": "^3.0.4",
     "vue": "^3.5.29",
-    "vue-router": "^5.0.3"
+    "vue-router": "^5.0.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tailwindcss/postcss": "^4.2.2",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitejs/plugin-vue": "^6.0.4",
+    "autoprefixer": "^10.4.27",
     "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-oxlint": "~1.50.0",
@@ -28,11 +31,26 @@
     "globals": "^17.3.0",
     "npm-run-all2": "^8.0.4",
     "oxlint": "~1.50.0",
+    "postcss": "^8.5.8",
     "prettier": "3.8.1",
+    "tailwindcss": "^4.2.2",
     "vite": "^7.3.1",
     "vite-plugin-vue-devtools": "^8.0.6"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
-  }
+  },
+  "description": "This template should help get you started developing with Vue 3 in Vite.",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Skeeyz/Viberadar.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Skeeyz/Viberadar/issues"
+  },
+  "homepage": "https://github.com/Skeeyz/Viberadar#readme"
 }
