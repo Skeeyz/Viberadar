@@ -23,9 +23,9 @@
           </a>
         </div>
         <div class="hero-actions">
-          <a href="#" class="btn-trailer">
+          <button class="btn-trailer" @click="$emit('open-trailer')">
             <span class="play-icon">▶</span> Watch Trailer
-          </a>
+          </button>
           <button class="btn-icon" title="Watchlist">♡</button>
           <button class="btn-icon" title="Bookmark">⊡</button>
         </div>
@@ -58,6 +58,7 @@ export default {
     rgba(13,23,32,0.35) 0%,
     rgba(13,23,32,0.65) 50%,
     rgba(13,23,32,0.97) 100%);
+    
 }
 .hero-content {
   position: relative; display: flex; align-items: flex-end;

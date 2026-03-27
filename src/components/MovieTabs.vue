@@ -24,6 +24,12 @@
       :movie="movie"
     />
 
+    <!-- Reviews Tab -->
+    <MovieReviews
+      v-else-if="activeTab === 'Reviews'"
+      :movie="movie"
+    />
+
     <!-- Other Tabs -->
     <div v-else class="tab-content">
       <p class="coming-soon">{{ activeTab }} content coming soon.</p>
@@ -34,10 +40,11 @@
 <script>
 import MovieTabOverview from '@/components/MovieTabOverview.vue'
 import MovieTabCastCrew from '@/components/MovieTabCastCrew.vue'
+import MovieReviews from '@/components/MovieReviews.vue';
 
 export default {
   name: 'MovieTabs',
-  components: { MovieTabOverview, MovieTabCastCrew },
+  components: { MovieTabOverview, MovieTabCastCrew, MovieReviews },
   props: {
     movie: {
       type: Object,

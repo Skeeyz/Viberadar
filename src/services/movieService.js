@@ -4,18 +4,22 @@ export const getPopularMovies = () => {
   return API.get("/movie/popular")
 }
 
-// services/tmdbService.js
+// ── Image size helpers ──────
+export const tmdbImage = {
+  poster: (path, size = 'w300') => path ? `${IMAGE_BASE_URL}/${size}${path}` : null,
+  backdrop: (path, size = 'original') => path ? `${IMAGE_BASE_URL}/${size}${path}` : null,
+  avatar: (path, size = 'w185') => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    return `${IMAGE_BASE_URL}/${size}${path}`;
+  },
+};
+
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
 const BASE_URL = 'https://api.themoviedb.org/3'
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
 
-// ── Image size helpers ──────────────────────────────────────────
-export const tmdbImage = {
-  poster: (path, size = 'w300')      => path ? `${IMAGE_BASE_URL}/${size}${path}` : null,
-  backdrop: (path, size = 'original') => path ? `${IMAGE_BASE_URL}/${size}${path}` : null,
-  avatar: (path, size = 'w185')      => path ? `${IMAGE_BASE_URL}/${size}${path}` : null,
-}
 
 // ── Base fetch ─────────────────────────────────────────────────
 async function tmdbFetch(endpoint, params = {}) {
@@ -31,29 +35,43 @@ async function tmdbFetch(endpoint, params = {}) {
 
 // ── Movie APIs ─────────────────────────────────────────────────
 
-/**
- * Lấy danh sách phim đang chiếu / phổ biến / top rated
- * type: 'now_playing' | 'popular' | 'top_rated' | 'upcoming'
- */
 export async function fetchMovieList(type = 'popular', page = 1) {
   const data = await tmdbFetch(`/movie/${type}`, { page })
   return data.results.map(normalizeMovie)
 }
 
-/**
- * Lấy chi tiết 1 phim theo ID
- */
-export async function fetchMovieDetail(movieId) {
-  const [detail, credits] = await Promise.all([
+export async function fetchMovieDetail(movieId, includeReviews = false) {
+  const promises = [
     tmdbFetch(`/movie/${movieId}`),
     tmdbFetch(`/movie/${movieId}/credits`),
-  ])
-  return normalizeMovieDetail(detail, credits)
+    tmdbFetch(`/movie/${movieId}/videos`),   // ← thêm vào đây
+  ];
+  if (includeReviews) {
+    promises.push(tmdbFetch(`/movie/${movieId}/reviews`));
+  }
+
+  const [detail, credits, videosData, reviewsData] = await Promise.all(promises);
+  const movie = normalizeMovieDetail(detail, credits);
+
+  // Gắn trailer vào movie detail
+  movie.trailer = getBestTrailer(videosData.results);
+
+  if (includeReviews && reviewsData) {
+    movie.reviews = reviewsData.results.map(normalizeReview);
+    movie.reviewsTotal = reviewsData.total_results;
+  }
+
+  return movie;
 }
 
 /**
- * Tìm kiếm phim theo tên
+ * Lấy danh sách tất cả video của phim (trailer, teaser, clip...)
  */
+export async function fetchMovieVideos(movieId) {
+  const data = await tmdbFetch(`/movie/${movieId}/videos`)
+  return data.results.map(normalizeVideo)
+}
+
 export async function searchMovies(query, page = 1) {
   const data = await tmdbFetch('/search/movie', { query, page })
   return data.results.map(normalizeMovie)
@@ -61,26 +79,20 @@ export async function searchMovies(query, page = 1) {
 
 // ── Normalizers ────────────────────────────────────────────────
 
-/**
- * Chuẩn hoá dữ liệu cho MovieCard (danh sách)
- */
 function normalizeMovie(movie) {
   return {
-    id:          movie.id,
-    title:       movie.title,
-    poster:      tmdbImage.poster(movie.poster_path),
-    backdrop:    tmdbImage.backdrop(movie.backdrop_path),
-    year:        movie.release_date?.slice(0, 4) ?? '—',
-    score:       movie.vote_average?.toFixed(1),
-    votes:       formatVotes(movie.vote_count),
-    genres:      movie.genre_ids ?? [],
-    overview:    movie.overview,
+    id:       movie.id,
+    title:    movie.title,
+    poster:   tmdbImage.poster(movie.poster_path),
+    backdrop: tmdbImage.backdrop(movie.backdrop_path),
+    year:     movie.release_date?.slice(0, 4) ?? '—',
+    score:    movie.vote_average?.toFixed(1),
+    votes:    formatVotes(movie.vote_count),
+    genres:   movie.genre_ids ?? [],
+    overview: movie.overview,
   }
 }
 
-/**
- * Chuẩn hoá dữ liệu cho MovieDetail (trang chi tiết)
- */
 function normalizeMovieDetail(movie, credits) {
   const director = credits.crew.find(c => c.job === 'Director')
   const writers  = credits.crew.filter(c => ['Screenplay', 'Writer', 'Story'].includes(c.job))
@@ -120,12 +132,37 @@ function normalizeMovieDetail(movie, credits) {
   }
 }
 
+/**
+ * Chuẩn hoá 1 video từ TMDB
+ */
+function normalizeVideo(video) {
+  return {
+    id:         video.id,
+    name:       video.name,
+    key:        video.key,                                          // YouTube video ID
+    type:       video.type,                                         // Trailer | Teaser | Clip | Featurette
+    site:       video.site,                                         // YouTube | Vimeo
+    official:   video.official,
+    embedUrl:   `https://www.youtube.com/embed/${video.key}`,
+    watchUrl:   `https://www.youtube.com/watch?v=${video.key}`,
+    thumbnail:  `https://img.youtube.com/vi/${video.key}/hqdefault.jpg`,
+  }
+}
+
+/**
+ * Chọn trailer tốt nhất: ưu tiên official Trailer trên YouTube
+ */
+function getBestTrailer(videos = []) {
+  const ytTrailers = videos.filter(v => v.type === 'Trailer' && v.site === 'YouTube')
+  return ytTrailers.find(v => v.official) ?? ytTrailers[0] ?? null
+}
+
 // ── Utils ──────────────────────────────────────────────────────
 const CREW_LABEL = {
-  'Director of Photography':      'CINEMATOGRAPHY',
-  'Original Music Composer':      'MUSIC',
-  'Editor':                       'EDITOR',
-  'Producer':                     'PRODUCER',
+  'Director of Photography': 'CINEMATOGRAPHY',
+  'Original Music Composer': 'MUSIC',
+  'Editor':                  'EDITOR',
+  'Producer':                'PRODUCER',
 }
 
 function formatRuntime(minutes) {
@@ -146,4 +183,32 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric',
   })
+}
+
+function normalizeReview(review) {
+  return {
+    id:             review.id,
+    author:         review.author,
+    authorAvatar:   tmdbImage.avatar(review.author_details?.avatar_path),
+    authorUsername: review.author_details?.username,
+    rating:         review.author_details?.rating
+                      ? (review.author_details.rating * 10).toFixed(0)
+                      : null,
+    content:        review.content,
+    date:           review.created_at
+                      ? new Date(review.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric', month: 'long', day: 'numeric',
+                        })
+                      : '—',
+    url:            review.url,
+  }
+}
+
+export async function fetchMovieReviews(movieId, page = 1) {
+  const data = await tmdbFetch(`/movie/${movieId}/reviews`, { page });
+  return {
+    reviews:      data.results.map(normalizeReview),
+    totalPages:   data.total_pages,
+    totalResults: data.total_results,
+  };
 }
