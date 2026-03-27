@@ -47,6 +47,8 @@
       </button>
 
       <SocialButtons @social-click="handleSocialLogin" />
+      
+      <div id="google-hidden-btn" class="hidden"></div>
 
       <div class="text-center mt-6 text-sm text-gray-400">
         Don't have an account? 
@@ -73,7 +75,6 @@ const errorMessage = ref('');
 const rememberMe = ref(false);
 
 onMounted(() => {
-  // Kiểm tra xem trong máy có lưu email cũ không
   const savedEmail = localStorage.getItem('remembered_email');
   if (savedEmail) {
     email.value = savedEmail;
@@ -97,28 +98,20 @@ const validateForm = () => {
 };
 
 const handleSignIn = async () => {
-  console.log("==> Trạng thái checkbox:", rememberMe.value);
   if (!validateForm()) return;
-
   const success = await authStore.signIn(email.value, password.value);
-  
   if (success) {
-    // 2. Nếu đăng nhập thành công và có tích "Remember me"
     if (rememberMe.value) {
       localStorage.setItem('remembered_email', email.value);
-      console.log("==> Trạng thái checkbox:", rememberMe.value);
     } else {
-      // Nếu không tích thì xóa email đã lưu đi (nếu có)
       localStorage.removeItem('remembered_email');
     }
-    
     router.push('/'); 
   }
 };
 
-
 const handleSocialLogin = (platform) => {
-  if (authStore.loading) return; // Chặn nhấn chồng chéo
+  if (authStore.loading) return;
   errorMessage.value = ''; 
 
   if (platform === 'facebook') {
@@ -126,15 +119,11 @@ const handleSocialLogin = (platform) => {
       errorMessage.value = "Facebook SDK chưa sẵn sàng!";
       return;
     }
-
-    // BẬT LOADING cho nút Sign In gốc
     authStore.loading = true; 
-
     window.FB.login((response) => {
       if (response.authResponse) {
         processFacebookLogin(response);
       } else {
-        // TẮT LOADING nếu user hủy
         authStore.loading = false; 
         errorMessage.value = "Bạn đã hủy đăng nhập Facebook.";
       }
@@ -147,77 +136,94 @@ const handleSocialLogin = (platform) => {
       return;
     }
 
-    authStore.loading = true; // Bật xoay nút chính
+    authStore.loading = true;
 
     window.google.accounts.id.initialize({
       client_id: "646063209072-qdlcsk4hacgbsvs8okibdgquieoc3rn1.apps.googleusercontent.com",
       callback: handleGoogleResponse,
+      ux_mode: "popup",
       use_fedcm_for_prompt: true
     });
 
-    // GỌI PROMPT VỚI CẢNH BÁO CHI TIẾT
     window.google.accounts.id.prompt((notification) => {
-      // 1. Trường hợp bảng chọn bị ẩn/bỏ qua (Skipped)
-      if (notification.isSkippedMoment()) {
-        authStore.loading = false;
-        console.warn("Google One Tap skipped");
-        // Hiển thị thông báo nhẹ nhàng để user biết tại sao không thấy gì hiện ra
-        errorMessage.value = "Bảng chọn Google đang bị ẩn. Vui lòng thử lại sau hoặc refresh trang (F5).";
+      if (notification.isSkippedMoment() || (notification.isNotDisplayed && notification.isNotDisplayed())) {
+        console.warn("One Tap bị chặn. Đang kích hoạt tự động Popup...");
+
+        const container = document.getElementById("google-hidden-btn");
+        
+        // 1. Tạo Observer để theo dõi khi nào nút Google thực sự xuất hiện trong DOM
+        const observer = new MutationObserver((mutations) => {
+          // Tìm iframe của Google trước, vì nút bấm nằm trong Iframe đó
+          const iframe = container.querySelector('iframe');
+          
+          // Đợi cho đến khi iframe xuất hiện và có trạng thái sẵn sàng
+          if (iframe) {
+            // Thử tìm nút bấm bên trong container (Google render nút bao quanh iframe)
+            const hiddenBtn = container.querySelector('[role="button"]');
+            if (hiddenBtn) {
+              // ĐẶT MỘT KHOẢNG TRỄ CỰC NGẮN (vài ms) ĐỂ IFRAME KỊP LOAD NỘI DUNG
+              setTimeout(() => {
+                hiddenBtn.click();
+                observer.disconnect();
+                authStore.loading = false;
+              }, 50); // 50ms là đủ để bypass các trễ mạng nhỏ
+            }
+          }
+        });
+
+        // Bắt đầu quan sát container của nút ẩn
+        observer.observe(container, { childList: true, subtree: true });
+
+        // 2. Ra lệnh render nút (vẫn để ẩn hoặc kích thước 0)
+        window.google.accounts.id.renderButton(container, { 
+          theme: "outline", 
+          size: "large" 
+        });
+
+        // 3. (Phòng hờ) Nếu sau 2s vẫn không click được thì nhả loading để tránh treo
+        setTimeout(() => {
+          observer.disconnect();
+          if (authStore.loading) authStore.loading = false;
+        }, 2000);
       }
 
-      // 2. Trường hợp người dùng chủ động bấm nút đóng (Dismissed)
       if (notification.isDismissedMoment()) {
-        authStore.loading = false;
         const reason = notification.getDismissedReason();
-        console.log("User dismissed reason:", reason);
-        
-        if (reason === 'credential_returned') {
-          // Đây là lúc Token đã được gửi về callback, không cần báo lỗi
-          return;
+        if (reason !== 'credential_returned') {
+          authStore.loading = false;
+          errorMessage.value = "Bạn đã đóng cửa sổ đăng nhập Google.";
         }
-        errorMessage.value = "Bạn đã đóng cửa sổ đăng nhập Google.";
-      }
-      
-      // 3. Trường hợp bảng chọn không thể hiển thị (ví dụ: do Cooldown)
-      // Lưu ý: isNotDisplayed() có thể không hoạt động ở một số trình duyệt mới do FedCM
-      if (notification.isNotDisplayed && notification.isNotDisplayed()) {
-         authStore.loading = false;
-         errorMessage.value = "Không thể hiển thị đăng nhập Google. Vui lòng dùng Email hoặc Facebook.";
       }
     });
   }
 };
 
-// Tạo hàm phụ riêng để xử lý async/await
 const processFacebookLogin = async (response) => {
   try {
-    if (response.authResponse) {
-      const token = response.authResponse.accessToken;
-      const success = await authStore.loginWithFacebook(token);
-      if (success) {
-        router.push('/');
-      }
-    } else {
-      errorMessage.value = "Bạn đã hủy đăng nhập Facebook.";
-    }
+    const token = response.authResponse.accessToken;
+    const success = await authStore.loginWithFacebook(token);
+    if (success) router.push('/');
   } catch (err) {
-    console.error("Lỗi xử lý FB Login:", err);
     errorMessage.value = "Đã xảy ra lỗi khi kết nối server.";
+  } finally {
+    authStore.loading = false;
   }
 };
 
 const handleGoogleResponse = async (response) => {
   try {
-    // response.credential chính là mã JWT Google trả về
     const success = await authStore.loginWithGoogle(response.credential);
-    if (success) {
-      router.push('/');
-    }
+    if (success) router.push('/');
   } catch (err) {
     errorMessage.value = "Lỗi đăng nhập Google!";
+  } finally {
+    authStore.loading = false;
+    // Ẩn lại nút ẩn nếu nó đang hiện
+    document.getElementById("google-hidden-btn").classList.add('hidden');
   }
 };
 </script>
+
 <style scoped>
 .fade-enter-active, .fade-leave-active { transition: all 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-10px); }
