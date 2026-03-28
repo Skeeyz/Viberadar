@@ -243,3 +243,57 @@ function formatDate(dateStr) {
     year: 'numeric', month: 'long', day: 'numeric',
   })
 }
+
+// Tìm kiếm TV Show
+export async function searchTVShows(query, page = 1) {
+  const data = await tmdbFetch('/search/tv', { query, page })
+  return {
+    results:     data.results.map(normalizeTVShow),
+    total_pages: data.total_pages,
+  }
+}
+
+// Normalize TV Show (khác Movie ở chỗ dùng name thay vì title)
+function normalizeTVShow(item) {
+  return {
+    id:     item.id,
+    title:  item.name,
+    year:   item.first_air_date?.slice(0, 4) ?? '',
+    poster: item.poster_path
+      ? `https://image.tmdb.org/t/p/w300${item.poster_path}`
+      : null,
+    score:  item.vote_average?.toFixed(1) ?? 'N/A',
+    type:   'tv',
+  }
+}
+export async function fetchTVShowDetail(id) {
+  const data = await tmdbFetch(`/tv/${id}`, {
+    append_to_response: 'credits,videos',
+  })
+
+  return {
+    id:           data.id,
+    title:        data.name,
+    overview:     data.overview,
+    year:         data.first_air_date?.slice(0, 4) ?? '',
+    poster:       data.poster_path
+                    ? `https://image.tmdb.org/t/p/w500${data.poster_path}`
+                    : null,
+    backdrop:     data.backdrop_path
+                    ? `https://image.tmdb.org/t/p/original${data.backdrop_path}`
+                    : null,
+    score:        data.vote_average?.toFixed(1) ?? 'N/A',
+    votes:        data.vote_count,
+    duration:     `${data.number_of_seasons} Season${data.number_of_seasons > 1 ? 's' : ''}`,
+    rating_label: data.adult ? 'TV-MA' : 'TV-PG',
+    genres:       data.genres?.map(g => g.name) ?? [],
+    cast:         data.credits?.cast?.slice(0, 10).map(c => ({
+                    name:      c.name,
+                    character: c.character,
+                    avatar:    c.profile_path
+                                 ? `https://image.tmdb.org/t/p/w185${c.profile_path}`
+                                 : null,
+                  })) ?? [],
+    type: 'tv',
+  }
+}

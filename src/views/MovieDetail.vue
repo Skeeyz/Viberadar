@@ -50,32 +50,14 @@ export default {
   },
   async created() {
     try {
-      fetch('https://api.themoviedb.org/3/movie/popular?api_key=45336b063987ba34f54222366bf8ee89')
-        .then(response => response.json())
-        .then(data => {
-         // In toàn bộ dữ liệu ra console
-        console.log('Dữ liệu từ TMDB:', data);
-    
-        // In chi tiết danh sách phim
-        console.log('Danh sách phim:', data.results);
-    
-        // In từng phim một
-        data.results.forEach((movie, index) => {
-      console.log(`Phim ${index + 1}:`, movie.title, movie.release_date);
-    });
-    
-    // Nếu muốn xem cấu trúc đối tượng rõ hơn, dùng console.dir
-    console.dir(data, { depth: null, colors: true });
-    
-    // Dùng console.table để hiển thị mảng dưới dạng bảng (dễ đọc)
-    console.table(data.results);
-  })
-  .catch(error => console.error('Lỗi:', error));
-      console.log('route params:', this.$route.params)  // xem có id không
-      console.log('full route:', this.$route)
-      // Lấy movieId từ route: /movie/:id
-      const movieId = this.$route.params.id
-      this.movie = await fetchMovieDetail(movieId,true)
+      const id   = this.$route.params.id
+      const type = this.$route.query.type || 'movie'  // ← đọc type từ URL
+
+      if (type === 'tv' || type === 'series') {
+        this.movie = await fetchTVShowDetail(id)
+      } else {
+        this.movie = await fetchMovieDetail(id, true)
+      }
     } catch (err) {
       this.error = 'Không thể tải dữ liệu phim. Vui lòng thử lại.'
       console.error(err)

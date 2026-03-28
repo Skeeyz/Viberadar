@@ -35,6 +35,7 @@
 </template>
 
 <script>
+import MovieSearch from './MovieSearch.vue';
 export default {
   name: 'MovieHero',
   props: {
@@ -114,4 +115,5 @@ export default {
   transition: background 0.15s, color 0.15s;
 }
 .btn-icon:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
 </style>

@@ -16,6 +16,11 @@ const routes = [
     name: 'MovieDetail',
     component: () => import('@/views/MovieDetail.vue')  
   },
+  {
+    path: '/search',
+    name: 'SearchResult',
+    component: () => import('../views/SearchResult.vue'),
+},
 ]
 
 const router = createRouter({

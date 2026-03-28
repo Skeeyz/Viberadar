@@ -19,6 +19,9 @@
       :trailer-key="trailerKey"
       @close="showTrailer = false"
     />
+    <div class="search-area">
+      <MovieSearch />
+    </div>
 
       <!-- Recently Updated -->
       <section class="list-section">
@@ -100,13 +103,13 @@ import MovieHero    from '../components/MovieHero.vue'
 import MovieCard    from '../components/MovieCard.vue'
 import Header       from '../components/Header.vue'
 import MovieTrailer from '../components/MovieTrailer.vue' 
+import MovieSearch from '@/components/MovieSearch.vue'
 import { useMovieStore } from '../stores/movieStore'
 import { fetchMovieVideos } from '../services/movieService'
 
-
 export default {
   name: 'Home',
-  components: { MainLayout, MovieHero, MovieCard, Header, MovieTrailer },
+  components: { MainLayout, MovieHero, MovieCard, Header, MovieTrailer, MovieSearch },
   setup() {
     const store = useMovieStore()
     return { store }
@@ -193,6 +196,11 @@ export default {
   cursor: pointer; transition: all 0.2s;
 }
 .tab-btn.active, .tab-btn:hover { background: #e8b84b; color: #000; border-color: #e8b84b; }
+.search-area {
+  display: flex;
+  justify-content: center;
+  padding: 50px 0;
+}
 
 @media (max-width: 900px) {
   .movie-grid { grid-template-columns: repeat(2, 1fr); }
