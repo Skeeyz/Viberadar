@@ -10,7 +10,9 @@ export const useAuthStore = defineStore('auth', {
     error: null,
     isInitialLoading: true,
   }),
-  
+  getters: {
+    isAuthenticated: (state) => !!state.token,
+  },
   actions: {
     async checkAuth() {
       if (!this.token){

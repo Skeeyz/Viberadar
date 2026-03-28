@@ -49,11 +49,17 @@
           </span>
         </div>
 
-        <button class="btn-watch">Watch Now</button>
-        <button class="btn-reaction" @click="toggleFavorite">
-  <i :class="isFavorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
-</button>
-
+        <div class="actions-buttons">
+          <button class="btn-watch">Watch Now</button>
+          <div class="reaction-group">
+            <button class="btn-reaction favorite" @click="toggleFavorite" title="Add to Favorite">
+              <i :class="isFavorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
+            </button>
+            <button class="btn-reaction watchlist" @click="toggleWatchlist" title="Add to Watchlist">
+              <i :class="isInWatchlist ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'"></i>
+            </button>
+          </div>
+        </div>
 
       </div>
     </div>
@@ -81,9 +87,14 @@ defineProps<{
 
 
 const isFavorite = ref(false)
+const isInWatchlist = ref(false)
 
 const toggleFavorite = () => {
   isFavorite.value = !isFavorite.value
+}
+
+const toggleWatchlist = () => {
+  isInWatchlist.value = !isInWatchlist.value // Thêm dòng này
 }
 
 const getStarCount = (rating: number) => {
@@ -232,12 +243,15 @@ const getStarCount = (rating: number) => {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    margin-bottom: 4px;
   }
 
   .genres {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    max-height: 60px; 
+    overflow: hidden;
   }
 
   .genre-tag {
@@ -303,4 +317,57 @@ const getStarCount = (rating: number) => {
   color: red;
 }
 
-  </style>
+.actions-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.btn-watch {
+  flex: 1; /* Nút Watch Now sẽ chiếm phần lớn không gian */
+  margin-top: 0 !important; /* Ghi đè margin-top cũ nếu có */
+}
+
+.reaction-group {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-reaction {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  color: #b0b0b0;
+  transition: all 0.3s ease;
+}
+
+.btn-reaction:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.btn-reaction.favorite i.fa-solid {
+  color: #ff0044;
+}
+
+.btn-reaction.watchlist i.fa-solid {
+  color: #ffbd39;
+}
+
+.btn-reaction:hover i.fa-heart {
+  color: #ff0044;
+}
+
+.btn-reaction:hover i.fa-bookmark {
+  color: #ffbd39;
+}
+</style>

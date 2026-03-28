@@ -1,6 +1,10 @@
 <script setup>
 import { ChevronDown } from 'lucide-vue-next';
 import SearchBar from './SearchBar.vue';
+import { useAuthStore } from '@/stores/authStore.js';
+import UserControl from './UserControl.vue';
+
+const authStore = useAuthStore();
 </script>
 <template>
   <header class="header">
@@ -72,8 +76,14 @@ import SearchBar from './SearchBar.vue';
 
       <!-- Actions -->
       <div class="actions">
-        <a href="#" class="login">LOGIN</a>
-        <button class="signup">SIGN UP</button>
+        <UserControl v-if="authStore.isAuthenticated" />
+
+        <template v-else>
+          <router-link to="/auth/signin" class="login">LOGIN</router-link>
+          <router-link to="/auth/signup" class="signup-link">
+            <button class="signup">SIGN UP</button>
+          </router-link>
+        </template>
       </div>
     </div>
 
