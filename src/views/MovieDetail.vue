@@ -1,6 +1,6 @@
 <template>
   <div class="movie-page">
-    <AppNavbar :left-links="leftLinks" />
+    <AppNavbar  />
 
     <div v-if="loading" class="state-msg">Loading...</div>
     <div v-else-if="error" class="state-msg error">{{ error }}</div>
@@ -33,12 +33,6 @@ export default {
       error: null,
       showTrailer: false,   
       trailerKey: null,
-      leftLinks: [
-        { label: 'HOME', dropdown: true },
-        { label: 'MOVIES', dropdown: true },
-        { label: 'NEWS', dropdown: true },
-        { label: 'COMMUNITY', dropdown: true },
-      ],
     }
   },
 

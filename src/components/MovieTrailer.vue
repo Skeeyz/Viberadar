@@ -1,6 +1,9 @@
 <template>
   <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal-box">
+    <div
+      class="modal-box"
+      :class="{ 'no-trailer-mode': !trailerKey }"
+    >
       <button class="close-btn" @click="$emit('close')">✕</button>
       <iframe
         v-if="trailerKey"
@@ -9,7 +12,7 @@
         allow="autoplay; encrypted-media"
         allowfullscreen
       />
-      <p v-else>Không tìm thấy trailer.</p>
+      <p v-else class="no-trailer">Không tìm thấy trailer.</p>
     </div>
   </div>
 </template>
@@ -17,7 +20,7 @@
 <script setup>
 defineProps({
   show:       { type: Boolean, default: false },
-  trailerKey: { type: String,  default: null  },  // YouTube video key
+  trailerKey: { type: String,  default: null  },
 })
 defineEmits(['close'])
 </script>
@@ -40,9 +43,10 @@ defineEmits(['close'])
   aspect-ratio: 16 / 9;
   background: #000;
   border-radius: 8px;
-  overflow: visible;        /* ← để close btn không bị cắt */
+  overflow: visible;
 }
 
+/* Normal mode: iframe fills the box */
 .modal-box iframe {
   width: 100%;
   height: 100%;
@@ -50,10 +54,17 @@ defineEmits(['close'])
   border-radius: 8px;
 }
 
+/* No‑trailer mode: flex centering */
+.modal-box.no-trailer-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .close-btn {
   position: absolute;
-  top: -40px;               /* ← nằm phía trên modal */
-  right: 0;                 /* ← sát mép phải */
+  top: -40px;
+  right: 0;
   background: rgba(255,255,255,0.15);
   color: #fff;
   border: none;
@@ -70,5 +81,12 @@ defineEmits(['close'])
 
 .close-btn:hover {
   background: rgba(255,255,255,0.3);
+}
+
+.no-trailer {
+  text-align: center;
+  color: #ccc;
+  font-size: 1rem;
+  margin: 0; /* remove any default margin that could offset centering */
 }
 </style>

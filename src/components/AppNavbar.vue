@@ -26,9 +26,14 @@
 export default {
   name: 'AppNavbar',
   props: {
-    leftLinks: {
+    leftLinks: {          
       type: Array,
-      default: () => [],
+      default: () => [
+        { label: 'HOME',      dropdown: true },
+        { label: 'MOVIES',    dropdown: true },
+        { label: 'NEWS',       dropdown: true },
+        { label: 'COMMUNITY', dropdown: true },
+      ],
     },
   },
 }
