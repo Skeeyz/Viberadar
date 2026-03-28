@@ -21,7 +21,9 @@
     </main>
   </div>
 </template>
-
+<script setup>
+  import '@/assets/css/auth.css';
+</script>
 <style scoped>
 .auth-container {
   /* Bạn có thể thêm font chữ chuyên biệt ở đây */
