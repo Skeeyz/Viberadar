@@ -41,7 +41,7 @@
       <div v-if="isLoading" class="skeleton-grid">
         <SkeletonCard v-for="i in 4" :key="i" />
       </div>
-      <MovieGrid v-else :movies="movies" />
+      <MovieGrid v-else :movies="movies" @watch="handleWatchMovie" />
     </section>
   </div>
 </template>
@@ -52,6 +52,7 @@ import SkeletonCard from "@/components/SkeletonCard.vue"
 import { getPopularMovies } from "@/services/movieService"
 import { onMounted, ref } from "vue"
 import FilterPanel from "@/components/FilterPanel.vue"
+import { useRouter } from "vue-router"
 
 
 interface Movie {
@@ -75,12 +76,13 @@ const isLoading = ref(true)
 const genres = ref<string[]>([])
 const yearOptions = ref<number[]>([])
 const ratings = [1, 2, 3, 4, 5]
+const router = useRouter()
 
 onMounted(async () => {
   try {
     movies.value = await getPopularMovies()
-    genres.value = [...new Set(movies.value.flatMap((movie) => movie.genres))].sort()
-    yearOptions.value = [...new Set(movies.value.map((movie) => movie.year))]
+    genres.value = Array.from(new Set(movies.value.flatMap((movie) => movie.genres))).sort()
+    yearOptions.value = Array.from(new Set(movies.value.map((movie) => movie.year)))
       .filter((year) => year > 0)
       .sort((a, b) => b - a)
   } catch (error) {
@@ -95,6 +97,10 @@ const handleApplyFilters = (filters: FilterState) => {
 
 const handleResetFilters = () => {
   console.log('filters reset')
+}
+
+const handleWatchMovie = (movieId: number) => {
+  router.push(`/movies/${movieId}`)
 }
 
 </script>

@@ -1,13 +1,14 @@
 <template>
   <section class="movie-section">
-  <div class="movie-grid">
-    <MovieCard
-      v-for="movie in movies"
-      :key="movie.id"
-      :movie="movie"
-    />
-  </div>
-</section>
+    <div class="movie-grid">
+      <MovieCard
+        v-for="movie in movies"
+        :key="movie.id"
+        :movie="movie"
+        @watch="emit('watch', $event)"
+      />
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -25,6 +26,10 @@ interface Movie {
 
 defineProps<{
   movies: Movie[]
+}>()
+
+const emit = defineEmits<{
+  (e: "watch", movieId: number): void
 }>()
 </script>
 
