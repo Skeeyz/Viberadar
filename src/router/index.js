@@ -13,8 +13,7 @@ const routes = [
     children: [
       {
         path: '',
-        component: Home,
-        meta: { requiresAuth: true }
+        component: Home
       },
       {
         path: 'filter',
@@ -25,11 +24,21 @@ const routes = [
         component: MovieDetail
       },
       {
+        path: 'favorites',
+        component: () => import('@/views/FavoriteView.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'watchlist',
+        component: () => import('@/views/WatchListView.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
         path: 'search',
         component: SearchResult
       }],
-    },
-    {
+  },
+  {
     path: '/auth',
     component: () => import('@/layouts/AuthLayout.vue'),
     children: [

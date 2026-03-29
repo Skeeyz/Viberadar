@@ -46,8 +46,8 @@ export const getPopularMovies = async () => {
       api_key: API_KEY
     }
   })
+  
   return res.data.results.map(mapMovie)
-
 }
 export const searchMovies = async (query) => {
   const res = await API.get("/search/movie", {

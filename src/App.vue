@@ -6,7 +6,6 @@
   const authStore = useAuthStore();
 
   onMounted(async () => {
-    // Chỉ kiểm tra nếu trong máy có sẵn token
     if (authStore.token) {
       await authStore.checkAuth();
     }

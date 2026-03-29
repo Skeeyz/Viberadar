@@ -48,6 +48,7 @@ defineProps<{
 
 @media (max-width: 480px) {
   .movie-grid {
+    grid-auto-rows: 1fr;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }

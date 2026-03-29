@@ -3,7 +3,7 @@
     <form @submit.prevent="handleSignIn" class="w-full space-y-4">
       
       <Transition name="fade">
-        <div v-if="errorMessage || authStore.error" 
+        <div v-if="errorMessage || authStore.error"
              class="bg-red-500/10 border border-red-500/50 text-red-500 text-sm py-2 px-4 rounded-lg text-center animate-pulse">
           {{ errorMessage || authStore.error }}
         </div>
@@ -61,7 +61,6 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
 import SocialButtons from '@/components/auth/SocialButtons.vue';
@@ -69,6 +68,7 @@ import SocialButtons from '@/components/auth/SocialButtons.vue';
 const authStore = useAuthStore();
 const router = useRouter();
 
+import { ref, onMounted } from 'vue';
 const email = ref('');
 const password = ref('');
 const errorMessage = ref('');

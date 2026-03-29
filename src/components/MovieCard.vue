@@ -76,6 +76,7 @@ interface Movie {
   rating: number
   description: string
   genres: string[]
+  addedAt: string
 }
 defineOptions({
   name: "MovieCard"
