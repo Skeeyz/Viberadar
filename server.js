@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/user.routes.js';
 
 dotenv.config();
 const app = express();
@@ -11,6 +12,7 @@ app.use(express.json());
 
 // Sử dụng các route đã tách
 app.use('/api/auth', authRoutes);
+app.use('/api', userRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
