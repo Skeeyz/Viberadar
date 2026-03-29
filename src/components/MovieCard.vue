@@ -6,7 +6,7 @@
       <!-- HD Badge -->
       <span v-if="showHd" class="badge hd">HD</span>
 
-      <!-- Episode badge (series) -->
+      <!-- Episode badge  -->
       <span v-if="movie.episode" class="badge ep-badge">EP {{ movie.episode }}</span>
 
       <!-- Season badge -->

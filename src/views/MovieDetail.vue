@@ -53,7 +53,7 @@ export default {
       const id   = this.$route.params.id
       const type = this.$route.query.type || 'movie'  // ← đọc type từ URL
 
-      if (type === 'tv' || type === 'series') {
+      if (type === 'tv') {
         this.movie = await fetchTVShowDetail(id)
       } else {
         this.movie = await fetchMovieDetail(id, true)

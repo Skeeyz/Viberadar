@@ -39,12 +39,13 @@
         />
       </div>
 
-      <!-- Pagination (chỉ hiện khi đang search) -->
-      <div v-if="isSearching && totalPages > 1" class="pagination">
-        <button class="page-btn" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">← Prev</button>
-        <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-        <button class="page-btn" :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">Next →</button>
-      </div>
+      <!-- Pagination: hiện cả khi browse lẫn khi search -->
+      <Pagination
+        v-if="isSearching ? totalPages > 1 : allTotalPages > 1"
+        :current="isSearching ? currentPage : allPage"
+        :total-pages="isSearching ? totalPages : allTotalPages"
+        @change="isSearching ? changePage($event) : fetchAll($event)"
+      />
 
     </div>
   </MainLayout>
@@ -54,12 +55,13 @@
 import MainLayout        from '../layouts/MainLayout.vue'
 import MovieCard         from '../components/MovieCard.vue'
 import Header            from '../components/Header.vue'
+import Pagination         from '@/components/Pagination.vue' 
 import { useMovieStore } from '../stores/movieStore'
-import { searchMovies }  from '../services/movieService'
+import { searchMovies, fetchAllMovies }  from '../services/movieService'
 
 export default {
   name: 'MovieList',
-  components: { MainLayout, MovieCard, Header },
+  components: { MainLayout, MovieCard, Header, Pagination },
 
   setup() {
     const store = useMovieStore()
@@ -71,6 +73,7 @@ export default {
       searchInput: '',
       query:       '',
       movies:      [],       // kết quả search
+      allMovies:    [], 
       loading:     false,
       error:       null,
       currentPage: 1,
@@ -89,7 +92,7 @@ export default {
     },
     displayMovies() {
       // Nếu đang search → dùng kết quả search, ngược lại dùng store
-      return this.isSearching ? this.movies : this.store.newMovies
+      return this.isSearching ? this.movies : this.allMovies
     },
   },
 
@@ -100,8 +103,8 @@ export default {
       this.searchInput = q
       this.query = q
       this.fetchSearch()
-    } else if (!this.store.newMovies.length) {
-      this.store.fetchHome()
+    } else  {
+      this.fetchAll()
     }
   },
 
@@ -118,18 +121,15 @@ export default {
       this.loading = true
       this.error   = null
       try {
-        const data = await searchMovies(this.query, this.currentPage)
-        // searchMovies trả về mảng → dùng trực tiếp
-        // Nếu trả về { results, total_pages } thì dùng data.results
-        this.movies     = Array.isArray(data) ? data : data.results
-        this.totalPages = data.total_pages ?? 1
+        const data      = await searchMovies(this.query, this.currentPage)
+        this.movies     = data.results       // ✅ luôn là array
+        this.totalPages = data.total_pages   // ✅ luôn có giá trị
       } catch (err) {
         this.error = 'Search failed. Please try again.'
-        console.error(err)
       } finally {
         this.loading = false
       }
-    },
+},
 
     changePage(page) {
       this.currentPage = page
@@ -149,6 +149,20 @@ export default {
     goToDetail(movie) {
       this.$router.push({ name: 'MovieDetail', params: { id: movie.id } })
     },
+
+    async fetchAll(page = 1) {
+      this.loading = true
+      try {
+        const data        = await fetchAllMovies(page)
+        this.allMovies    = data.movies
+        this.allPage      = page
+        this.allTotalPages = data.totalPages
+      } catch (err) {
+        this.error = err.message
+      } finally {
+        this.loading = false
+      }
+    },
   },
 }
 </script>
@@ -164,6 +178,16 @@ export default {
   gap: 1rem;
   margin-bottom: 1rem;
 }
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);  /* ← cố định 5 cột */
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 1200px) { .movie-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 900px)  { .movie-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px)  { .movie-grid { grid-template-columns: repeat(2, 1fr); } }
 
 /* Search bar */
 .search-bar {

@@ -93,7 +93,7 @@ const options = [
   { label: 'Movie',   value: 'movie'  },
 ]
 
-const selected     = ref('tv')
+const selected     = ref('movie')
 const dropdownOpen = ref(false)
 const query        = ref('')
 const results      = ref([])
@@ -112,7 +112,7 @@ function fetchByType(q, page = 1) {
   if (selected.value === 'movie') {
     return searchMovies(q, page)
   }
-  // tv và series đều dùng /search/tv
+  
   return searchTVShows(q, page)
 }
 

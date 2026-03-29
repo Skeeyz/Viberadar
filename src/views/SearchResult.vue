@@ -159,7 +159,7 @@ export default {
       this.loading = true
       this.error   = null
       try {
-        const fetcher = (this.searchType === 'tv' || this.searchType === 'series')
+        const fetcher = (this.searchType === 'tv' )
             ? searchTVShows
             : searchMovies
         const data = await fetcher(this.query, this.currentPage)

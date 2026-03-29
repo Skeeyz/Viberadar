@@ -223,17 +223,16 @@ export default {
     },
 
     applyFilters() {
-      // Build TMDB-compatible query params
       const params = {
+        type: this.filters.type,               // 'movie' | 'tv'
         with_genres: this.filters.genres.join(','),
         with_origin_country: this.filters.country,
         primary_release_year: this.filters.year,
         sort_by: this.filters.sort,
         'vote_average.gte': this.filters.minRating,
       }
-      this.$emit('apply', { filters: { ...this.filters }, params })
-    },
-
+      this.$emit('apply', { params })
+},
     resetFilters() {
       this.filters = {
         type: 'movie',

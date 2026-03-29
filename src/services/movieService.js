@@ -17,6 +17,7 @@ export const tmdbImage = {
 
 // ── Base fetch ─────────────────────────────────────────────────
 async function tmdbFetch(endpoint, params = {}) {
+  if (params.page) params.page = Math.min(Number(params.page), 500)
   const url = new URL(`${BASE_URL}${endpoint}`)
   url.searchParams.set('api_key', API_KEY)
   url.searchParams.set('language', 'en-US')
@@ -37,7 +38,10 @@ export const getPopularMovies = () => {
 // Lấy danh sách phim theo type: 'popular' | 'now_playing' | 'upcoming' | 'top_rated'
 export async function fetchMovieList(type = 'popular', page = 1) {
   const data = await tmdbFetch(`/movie/${type}`, { page })
-  return data.results.map(normalizeMovie)
+  return {
+    movies:     data.results.map(normalizeMovie),
+    totalPages: data.total_pages,           // ✅ consistent shape
+  }
 }
 
 // Lấy danh sách phim theo type, trả về cả total_pages để phân trang
@@ -45,7 +49,7 @@ export async function fetchMovieListPaged(type = 'popular', page = 1) {
   const data = await tmdbFetch(`/movie/${type}`, { page })
   return {
     movies:      data.results.map(normalizeMovie),
-    totalPages:  data.total_pages,
+    totalPages:   Math.min(data.total_pages, 500),
     totalResults: data.total_results,
     currentPage: data.page,
   }
@@ -96,7 +100,15 @@ export async function fetchRecommendedMovies(movieId, page = 1) {
 // Tìm kiếm phim theo từ khoá
 export async function searchMovies(query, page = 1) {
   const data = await tmdbFetch('/search/movie', { query, page })
-  return data.results.map(normalizeMovie)
+  return {
+    results:     data.results.map(normalizeMovie),
+    total_pages: data.total_pages,
+    total_results: data.total_results,
+  }
+}
+
+export async function fetchAllMovies(page = 1) {
+  return fetchMovieListPaged('popular', page)
 }
 
 // Lấy reviews của phim (phân trang)
@@ -138,6 +150,7 @@ function normalizeMovie(movie) {
     votes:    formatVotes(movie.vote_count),
     genres:   movie.genre_ids ?? [],
     overview: movie.overview,
+    type:     'movie',
   }
 }
 
@@ -256,14 +269,16 @@ export async function searchTVShows(query, page = 1) {
 // Normalize TV Show (khác Movie ở chỗ dùng name thay vì title)
 function normalizeTVShow(item) {
   return {
-    id:     item.id,
-    title:  item.name,
-    year:   item.first_air_date?.slice(0, 4) ?? '',
-    poster: item.poster_path
-      ? `https://image.tmdb.org/t/p/w300${item.poster_path}`
-      : null,
-    score:  item.vote_average?.toFixed(1) ?? 'N/A',
-    type:   'tv',
+    id:       item.id,
+    title:    item.name,
+    year:     item.first_air_date?.slice(0, 4) ?? '',
+    poster:   tmdbImage.poster(item.poster_path),
+    backdrop: tmdbImage.backdrop(item.backdrop_path),
+    score:    item.vote_average?.toFixed(1) ?? 'N/A',
+    votes:    item.vote_count,
+    genres:   item.genre_ids ?? [],
+    overview: item.overview,
+    type:     'tv',
   }
 }
 export async function fetchTVShowDetail(id) {
@@ -295,5 +310,49 @@ export async function fetchTVShowDetail(id) {
                                  : null,
                   })) ?? [],
     type: 'tv',
+  }
+}
+
+export async function fetchFilteredMovies(params) {
+  const type = params.type || 'movie'
+  const query = new URLSearchParams({ api_key: API_KEY, language: 'en-US' })
+
+  if (params.with_genres)           query.set('with_genres', params.with_genres)
+  if (params.with_origin_country)   query.set('with_origin_country', params.with_origin_country)
+  if (params.primary_release_year)  query.set('primary_release_year', params.primary_release_year)
+  if (params.sort_by)               query.set('sort_by', params.sort_by)
+  if (params['vote_average.gte'])   query.set('vote_average.gte', params['vote_average.gte'])
+
+  const res = await fetch(`${BASE_URL}/discover/${type}?${query}`)
+  const data = await res.json()
+
+  return (data.results || []).map(m => ({
+    id:       m.id,
+    title:    m.title || m.name,
+    poster:   m.poster_path ? `https://image.tmdb.org/t/p/w300${m.poster_path}` : null,
+    backdrop: m.backdrop_path ? `https://image.tmdb.org/t/p/w780${m.backdrop_path}` : null,
+    year:     (m.release_date || m.first_air_date || '').slice(0, 4),
+    score:    m.vote_average?.toFixed(1),
+    votes:    m.vote_count,
+    genres:   m.genre_ids ?? [],
+    type,
+  }))
+}
+
+export async function fetchTVList(type = 'popular', page = 1) {
+  const data = await tmdbFetch(`/tv/${type}`, { page })
+  return {
+    movies:     data.results.map(normalizeTVShow),  // ✅
+    totalPages: data.total_pages,
+  }
+}
+// Thêm vào movieService.js
+export async function fetchTVListPaged(type = 'popular', page = 1) {
+  const data = await tmdbFetch(`/tv/${type}`, { page })
+  return {
+    movies:      data.results.map(normalizeTVShow),
+    totalPages:   Math.min(data.total_pages, 500),
+    totalResults: data.total_results,
+    currentPage: data.page,
   }
 }

@@ -36,8 +36,21 @@
         <!-- MAIN CONTENT -->
         <div class="content-main">
 
+          <!-- Kết quả bộ lọc -->
+        <section v-if="store.filteredMovies.length" id="filter-result" class="movie-section">
+          <Header title="Filter Results" />
+          <div v-if="store.filterLoading" class="state-msg">Loading...</div>
+          <div v-else class="movie-grid">
+            <MovieCard
+              v-for="movie in store.filteredMovies"
+              :key="movie.id"
+              :movie="movie"
+              @click="goToDetail"
+            />
+          </div>
+        </section>
           <!-- Recently Updated -->
-          <section class="list-section">
+          <section v-if="!store.filteredMovies.length" class="list-section">
             <Header title="Recently Updated" />
             <div class="recent-list">
               <div
@@ -58,8 +71,8 @@
           </section>
 
           <!-- New Release - Movies -->
-          <section class="movie-section">
-            <Header title="New Release - Movies" :view-all="true" />
+          <section v-if="!store.filteredMovies.length" class="movie-section">
+            <Header title="New Release - Movies" :view-all="true" section="new-release" />
             <div class="movie-grid">
               <MovieCard
                 v-for="movie in store.newMovies"
@@ -68,24 +81,34 @@
                 @click="goToDetail"
               />
             </div>
+            <Pagination
+              :current="store.newMoviesPage"
+              :total-pages="store.newMoviesTotalPages"
+              @change="p => store.changePage('new', p)"
+            />
           </section>
 
-          <!-- New Release - Series -->
-          <section class="movie-section">
-            <Header title="New Release - Series" :view-all="true" />
+          <!-- Upcomming - Movies -->
+          <section v-if="!store.filteredMovies.length" class="movie-section">
+            <Header title="Upcomming - Movies" :view-all="true" section="upcoming" />
             <div class="movie-grid">
               <MovieCard
-                v-for="series in store.newSeries"
-                :key="series.id"
-                :movie="series"
+                v-for="upcoming in store.upcomingMovie"
+                :key="upcoming.id"
+                :movie="upcoming"
                 @click="goToDetail"
               />
             </div>
+            <Pagination
+              :current="store.upcomingPage"
+              :total-pages="store.upcomingTotalPages"
+              @change="p => store.changePage('upcoming', p)"
+            />
           </section>
 
           <!-- Recommended -->
           <section class="movie-section">
-            <Header title="Recommended" :view-all="true">
+            <Header title="Recommended" :view-all="true" :section="activeTab === 'Movies' ? 'recommended' : 'recommended-tv'">
               <div class="filter-tabs">
                 <button
                   v-for="tab in tabs"
@@ -97,16 +120,19 @@
               </div>
             </Header>
             <div class="movie-grid">
-              <MovieCard
-                v-for="movie in store.recommended"
-                :key="movie.id"
-                :movie="movie"
-                @click="goToDetail"
-              />
+              <MovieCard v-for="movie in store[activeTab === 'Movies' ? 'recommended' : 'recommendedTV']"
+                :key="movie.id" :movie="movie" @click="goToDetail" />
             </div>
+            <Pagination
+              :current="activeTab === 'Movies' ? store.recommendedPage : store.recommendedTVPage"
+              :total-pages="activeTab === 'Movies' ? store.recommendedTotalPages : store.recommendedTVTotalPages"
+              @change="p => store.changePage(activeTab === 'Movies' ? 'recommended' : 'recommendedTV', p)"
+            />
           </section>
 
         </div><!-- end content-main -->
+        
+
       </div><!-- end content-layout -->
 
     </template>
@@ -121,12 +147,13 @@ import Header       from '../components/Header.vue'
 import MovieTrailer from '../components/MovieTrailer.vue'
 import MovieSearch  from '@/components/MovieSearch.vue'
 import MovieFilter  from '@/components/MovieFilter.vue'
+import Pagination from '@/components/Pagination.vue'
 import { useMovieStore } from '../stores/movieStore'
 import { fetchMovieVideos } from '../services/movieService'
 
 export default {
   name: 'Home',
-  components: { MainLayout, MovieHero, MovieCard, Header, MovieTrailer, MovieSearch, MovieFilter },
+  components: { MainLayout, MovieHero, MovieCard, Header, MovieTrailer, MovieSearch, MovieFilter, Pagination },
 
   setup() {
     const store = useMovieStore()
@@ -136,7 +163,7 @@ export default {
   data() {
     return {
       activeTab: 'Movies',
-      tabs: ['Movies', 'Series', 'Animation'],
+      tabs: ['Movies', 'TV Show'],
       showTrailer: false,
       trailerKey: null,
       currentTrailerMovieId: null,
@@ -147,7 +174,27 @@ export default {
     this.store.fetchHome()
   },
 
+  computed: {
+  recommendedList() {
+    // Lấy đúng nguồn dữ liệu theo tab
+    let items = this.activeTab === 'Movies' 
+      ? (this.store.recommended || [])
+      : (this.store.recommendedTV || [])
+    
+    // Sắp xếp giảm dần theo rating
+    return [...items].sort((a, b) => {
+      const ratingA = parseFloat(a.score) || 0
+      const ratingB = parseFloat(b.score) || 0
+      return ratingB - ratingA
+    })
+  }
+},
+  
+
   methods: {
+    setActiveTab(tab) {
+      this.activeTab = tab;
+    },
     goToDetail(movie) {
       this.$router.push({ name: 'MovieDetail', params: { id: movie.id } })
     },
@@ -175,15 +222,17 @@ export default {
       console.log('Rated:', stars)
     },
 
-    onFilterApply(payload) {
-      console.log('Filter applied:', payload)
-      // TODO: gọi store hoặc API với payload.params
+    onFilterApply({ params }) {
+    this.store.fetchFiltered(params)
+    // scroll xuống kết quả
+    this.$nextTick(() => {
+      document.getElementById('filter-result')?.scrollIntoView({ behavior: 'smooth' })
+    })
+  },
+    onFilterReset() {
+      this.store.resetFiltered()
     },
 
-    onFilterReset() {
-      console.log('Filter reset')
-      // TODO: reload danh sách mặc định
-    },
   },
 }
 </script>

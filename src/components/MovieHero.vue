@@ -35,7 +35,6 @@
 </template>
 
 <script>
-import MovieSearch from './MovieSearch.vue';
 export default {
   name: 'MovieHero',
   props: {

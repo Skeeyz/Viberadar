@@ -21,6 +21,11 @@ const routes = [
     name: 'SearchResult',
     component: () => import('../views/SearchResult.vue'),
 },
+  {
+  path: '/view-all/:section',
+  name: 'ViewAll',
+  component: () => import('../views/ViewAll.vue'),
+}
 ]
 
 const router = createRouter({
