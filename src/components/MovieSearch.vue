@@ -91,7 +91,6 @@ const dropdownRef = ref(null)
 const options = [
   { label: 'TV Show', value: 'tv'     },
   { label: 'Movie',   value: 'movie'  },
-  { label: 'Series',  value: 'series' },
 ]
 
 const selected     = ref('tv')
