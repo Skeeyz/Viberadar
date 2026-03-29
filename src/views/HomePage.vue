@@ -38,8 +38,8 @@
         </div>
       </div>
 
-      <div v-if="isLoading" class="skeleton-grid">
-        <SkeletonCard v-for="i in 4" :key="i" />
+      <div v-if="isLoading" class="skeleton-grid" aria-busy="true" aria-label="Loading movies">
+        <MovieCardSkeleton v-for="i in 5" :key="i" />
       </div>
       <MovieGrid v-else :movies="movies" @watch="handleWatchMovie" />
     </section>
@@ -48,9 +48,9 @@
 
  <script setup lang="ts">
 import MovieGrid from "@/components/MovieGrid.vue"
-import SkeletonCard from "@/components/SkeletonCard.vue"
+import MovieCardSkeleton from "@/components/MovieCardSkeleton.vue"
 import { getPopularMovies } from "@/services/movieService"
-import { onMounted, ref } from "vue"
+import { onMounted, ref, onBeforeUnmount } from "vue"
 import FilterPanel from "@/components/FilterPanel.vue"
 import { useRouter } from "vue-router"
 
@@ -89,6 +89,19 @@ onMounted(async () => {
     console.error("Failed to fetch popular movies:", error)
   } finally {
     isLoading.value = false
+  }
+})
+let loadingPreviewTimer: ReturnType<typeof setTimeout> | null = null
+
+onMounted(async () => {
+  loadingPreviewTimer = setTimeout(() => {
+
+  }, 2000)
+})
+
+onBeforeUnmount(() => {
+  if (loadingPreviewTimer) {
+    clearTimeout(loadingPreviewTimer)
   }
 })
 const handleApplyFilters = (filters: FilterState) => {
