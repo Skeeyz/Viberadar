@@ -1,74 +1,16 @@
 <script setup>
-import { ChevronDown } from 'lucide-vue-next';
 import SearchBar from './SearchBar.vue';
 </script>
 <template>
   <header class="header">
     <div class="header-top">
       <!-- Logo -->
-      <div class="logo">
-        <span class="highlight">VIBE</span>RADAR
-      </div>
+      <RouterLink to= "/" class="logo" aria-label="Viberadar Home">
+        <span class="highlight" >VIBE</span>RADAR
+      </RouterLink>
 
       <!-- Menu -->
-      <nav class="nav">
-  <!-- HOME -->
-  <div class="nav-item">
-    <span class="nav-link">
-      HOME <ChevronDown class="icon" />
-    </span>
-    <div class="dropdown">
-      <a href="#">Home 1</a>
-      <a href="#">Home 2</a>
-    </div>
-  </div>
 
-  <!-- MOVIES -->
-  <div class="nav-item">
-    <span class="nav-link">
-      MOVIES <ChevronDown class="icon" />
-    </span>
-    <div class="dropdown">
-      <a href="#">Home 1</a>
-      <a href="#">Home 2</a>
-    </div>
-  </div>
-  <!-- NEWS -->
-  <div class="nav-item">
-    <span class="nav-link">
-      NEWS <ChevronDown class="icon" />
-    </span>
-    <div class="dropdown">
-      <a href="#">Home 1</a>
-      <a href="#">Home 2</a>
-    </div>
-  </div>
-
-  <!-- COMMUNITY -->
-  <div class="nav-item">
-    <span class="nav-link">
-      COMMUNITY <ChevronDown class="icon" />
-    </span>
-    <div class="dropdown">
-      <a href="#">Home 1</a>
-      <a href="#">Home 2</a>
-    </div>
-  </div>
-
-  <!-- PAGE -->
-  <div class="nav-item">
-    <span class="nav-link">
-      PAGE <ChevronDown class="icon" />
-    </span>
-    <div class="dropdown">
-      <a href="#">Home 1</a>
-      <a href="#">Home 2</a>
-    </div>
-  </div>
-
-  <!-- HELP (no dropdown) -->
-  <a href="#">HELP</a>
-</nav>
 
       <!-- Actions -->
       <div class="actions">
@@ -89,6 +31,10 @@ import SearchBar from './SearchBar.vue';
 .header {
   background: linear-gradient(180deg, #0c1323, #0a1830);
   color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
 }
 
 /* TOP */
@@ -97,15 +43,17 @@ import SearchBar from './SearchBar.vue';
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 20px 40px;
+  padding: 14px 32px;
   flex-wrap: wrap;
 }
 
 /* Logo */
 .logo {
   font-weight: bold;
-  font-size: 20px;
+  font-size: 18px;
+  line-height: 1;
   white-space: nowrap;
+  border-bottom: none;
 }
 
 .highlight {
@@ -175,7 +123,7 @@ import SearchBar from './SearchBar.vue';
 .actions {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
@@ -183,23 +131,26 @@ import SearchBar from './SearchBar.vue';
 .login {
   color: #ddd;
   text-decoration: none;
+  font-size: 13px;
 }
 
 .signup {
   background: #ff2c55;
   border: none;
-  padding: 8px 14px;
+  padding: 7px 12px;
   border-radius: 6px;
   color: white;
   cursor: pointer;
+  font-size: 13px;
+  line-height: 1.2;
 }
 
 .header-bottom {
-  padding: 20px 40px 40px;
+  padding: 0 32px 20px;
 }
 
 .search-wrapper {
-  max-width: 800px;
+  max-width: 760px;
   margin: auto;
   width: 100%;
 }
@@ -225,11 +176,11 @@ import SearchBar from './SearchBar.vue';
 
 @media (max-width: 1100px) {
   .header-top {
-    padding: 18px 24px;
+    padding: 12px 24px;
   }
 
   .header-bottom {
-    padding: 18px 24px 28px;
+    padding: 0 24px 18px;
   }
 
   .nav {
@@ -259,11 +210,11 @@ import SearchBar from './SearchBar.vue';
 
 @media (max-width: 640px) {
   .header-top {
-    padding: 16px;
+    padding: 12px 16px;
   }
 
   .header-bottom {
-    padding: 14px 16px 22px;
+    padding: 0 16px 16px;
   }
 
   .nav {
