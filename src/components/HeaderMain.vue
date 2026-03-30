@@ -10,69 +10,12 @@ const authStore = useAuthStore();
   <header class="header">
     <div class="header-top">
       <!-- Logo -->
-      <div class="logo">
+      <RouterLink to="/" class="logo" aria-label="Viberadar Home">
         <span class="highlight">VIBE</span>RADAR
-      </div>
+      </RouterLink>
 
       <!-- Menu -->
-      <nav class="nav">
-  <!-- HOME -->
-  <div class="nav-item">
-    <span class="nav-link">
-      HOME <ChevronDown class="icon" />
-    </span>
-    <div class="dropdown">
-      <a href="#">Home 1</a>
-      <a href="#">Home 2</a>
-    </div>
-  </div>
 
-  <!-- MOVIES -->
-  <div class="nav-item">
-    <span class="nav-link">
-      MOVIES <ChevronDown class="icon" />
-    </span>
-    <div class="dropdown">
-      <a href="#">Home 1</a>
-      <a href="#">Home 2</a>
-    </div>
-  </div>
-  <!-- NEWS -->
-  <div class="nav-item">
-    <span class="nav-link">
-      NEWS <ChevronDown class="icon" />
-    </span>
-    <div class="dropdown">
-      <a href="#">Home 1</a>
-      <a href="#">Home 2</a>
-    </div>
-  </div>
-
-  <!-- COMMUNITY -->
-  <div class="nav-item">
-    <span class="nav-link">
-      COMMUNITY <ChevronDown class="icon" />
-    </span>
-    <div class="dropdown">
-      <a href="#">Home 1</a>
-      <a href="#">Home 2</a>
-    </div>
-  </div>
-
-  <!-- PAGE -->
-  <div class="nav-item">
-    <span class="nav-link">
-      PAGE <ChevronDown class="icon" />
-    </span>
-    <div class="dropdown">
-      <a href="#">Home 1</a>
-      <a href="#">Home 2</a>
-    </div>
-  </div>
-
-  <!-- HELP (no dropdown) -->
-  <a href="#">HELP</a>
-</nav>
 
       <!-- Actions -->
       <div class="actions">
@@ -99,6 +42,9 @@ const authStore = useAuthStore();
 .header {
   background: linear-gradient(180deg, #0c1323, #0a1830);
   color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 /* TOP */
@@ -107,15 +53,17 @@ const authStore = useAuthStore();
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 20px 40px;
+  padding: 14px 32px;
   flex-wrap: wrap;
 }
 
 /* Logo */
 .logo {
   font-weight: bold;
-  font-size: 20px;
+  font-size: 18px;
+  line-height: 1;
   white-space: nowrap;
+  text-decoration: none;
 }
 
 .highlight {
@@ -185,7 +133,7 @@ const authStore = useAuthStore();
 .actions {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
@@ -193,23 +141,26 @@ const authStore = useAuthStore();
 .login {
   color: #ddd;
   text-decoration: none;
+  font-size: 13px;
 }
 
 .signup {
   background: #ff2c55;
   border: none;
-  padding: 8px 14px;
+  padding: 7px 12px;
   border-radius: 6px;
   color: white;
   cursor: pointer;
+  font-size: 13px;
+  line-height: 1.2;
 }
 
 .header-bottom {
-  padding: 20px 40px 40px;
+  padding: 0 32px 20px;
 }
 
 .search-wrapper {
-  max-width: 800px;
+  max-width: 760px;
   margin: auto;
   width: 100%;
 }
@@ -235,11 +186,11 @@ const authStore = useAuthStore();
 
 @media (max-width: 1100px) {
   .header-top {
-    padding: 18px 24px;
+    padding: 12px 24px;
   }
 
   .header-bottom {
-    padding: 18px 24px 28px;
+    padding: 0 24px 18px;
   }
 
   .nav {
@@ -269,11 +220,11 @@ const authStore = useAuthStore();
 
 @media (max-width: 640px) {
   .header-top {
-    padding: 16px;
+    padding: 12px 16px;
   }
 
   .header-bottom {
-    padding: 14px 16px 22px;
+    padding: 0 16px 16px;
   }
 
   .nav {

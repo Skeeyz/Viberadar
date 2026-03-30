@@ -38,8 +38,8 @@
         </div>
       </div>
 
-      <div v-if="isLoading" class="skeleton-grid">
-        <SkeletonCard v-for="i in 4" :key="i" />
+      <div v-if="isLoading" class="skeleton-grid" aria-busy="true" aria-label="Loading movies">
+        <MovieCardSkeleton v-for="i in 5" :key="i" />
       </div>
       <MovieGrid v-else :movies="movies" />
     </section>
@@ -48,9 +48,9 @@
 
  <script setup lang="ts">
 import MovieGrid from "@/components/MovieGrid.vue"
-import SkeletonCard from "@/components/SkeletonCard.vue"
+import MovieCardSkeleton from "@/components/MovieCardSkeleton.vue"
 import { getPopularMovies } from "@/services/movieService"
-import { onMounted, ref } from "vue"
+import { onBeforeMount, onMounted, ref } from "vue"
 import FilterPanel from "@/components/FilterPanel.vue"
 
 
@@ -76,6 +76,7 @@ const genres = ref<string[]>([])
 const yearOptions = ref<number[]>([])
 const ratings = [1, 2, 3, 4, 5]
 
+
 onMounted(async () => {
   try {
     movies.value = await getPopularMovies()
@@ -89,6 +90,22 @@ onMounted(async () => {
     isLoading.value = false
   }
 })
+
+// ---test skeleton
+
+// let loadingPreviewTimer: ReturnType<typeof setTimeout> | null = null
+
+// onMounted (async () => {
+//   loadingPreviewTimer = setTimeout(() => {
+//     isLoading.value = false
+//   }, 1500)
+// })
+// onBeforeMount( () => {
+//   if (loadingPreviewTimer) {
+//     clearTimeout(loadingPreviewTimer)
+//   }
+// })
+
 const handleApplyFilters = (filters: FilterState) => {
   console.log('filters from panel:', filters)
 }
