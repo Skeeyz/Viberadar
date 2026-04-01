@@ -8,11 +8,9 @@ const router = express.Router();
 
 // 1. Routes cho Favorites
 router.get('/favorites', verifyToken, movieController.getFavorites);
-router.post('/favorites/toggle', verifyToken, movieController.toggleFavorite);
-
+router.post('/user/favorites/toggle', verifyToken, movieController.toggleFavorite);
 // 2. Routes cho Watchlist
 router.get('/watchlist', verifyToken, movieController.getWatchlist);
-// Nếu bạn có hàm toggleWatchlist thì thêm ở đây:
-// router.post('/watchlist/toggle', verifyToken, movieController.toggleWatchlist);
+router.post('/user/watchlist/toggle', verifyToken, movieController.toggleWatchlist);
 
 export default router;
