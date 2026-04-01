@@ -52,11 +52,20 @@
         <div class="actions-buttons">
           <button class="btn-watch">Watch Now</button>
           <div class="reaction-group">
-            <button class="btn-reaction favorite" @click="toggleFavorite" title="Add to Favorite">
-              <i :class="isFavorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
+            <button 
+              class="btn-reaction favorite" 
+              @click.stop="handleFavoriteClick" 
+              title="Favorite Action">
+              <i v-if="viewType === 'favorites' && !isFavorite" class="fa-solid fa-heart-crack"></i>
+              <i v-else :class="isFavorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
             </button>
-            <button class="btn-reaction watchlist" @click="toggleWatchlist" title="Add to Watchlist">
-              <i :class="isInWatchlist ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'"></i>
+
+            <button 
+              class="btn-reaction watchlist" 
+              @click.stop="handleWatchlistClick" 
+              title="Watchlist Action">
+              <i v-if="viewType === 'watchlist' && !isInWatchlist" class="fa-solid fa-bookmark-slash"></i>
+              <i v-else :class="isInWatchlist ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'"></i>
             </button>
           </div>
         </div>
@@ -65,8 +74,10 @@
     </div>
   </template>
 
-  <script setup lang="ts">
-import { ref } from "vue"
+<script setup lang="ts">
+import { ref, watch, computed } from "vue"
+import Swal from 'sweetalert2'
+import { useFavoriteStore, useWatchlistStore } from '@/stores/userStore';
 
 interface Movie {
   id: number
@@ -77,26 +88,31 @@ interface Movie {
   description: string
   genres: string[]
   addedAt: string
+  type: 'movie' | 'tv'
 }
 defineOptions({
   name: "MovieCard"
 })
 
-defineProps<{
-  movie: Movie
+const favoriteStore = useFavoriteStore();
+const watchlistStore = useWatchlistStore();
+
+const props = defineProps<{
+  movie: Movie,
+  viewType?: 'home' | 'favorites' | 'watchlist' 
 }>()
 
 
-const isFavorite = ref(false)
-const isInWatchlist = ref(false)
+const isFavorite = computed(() => favoriteStore.isFavorite(props.movie.id));
+const isInWatchlist = computed(() => watchlistStore.isInWatchlist(props.movie.id));
 
-const toggleFavorite = () => {
-  isFavorite.value = !isFavorite.value
+const handleFavoriteClick = async () => {
+  await favoriteStore.toggleFavorite(props.movie)
 }
 
-const toggleWatchlist = () => {
-  isInWatchlist.value = !isInWatchlist.value // Thêm dòng này
-}
+const handleWatchlistClick = async () => {
+  await watchlistStore.toggleWatchlist(props.movie);
+};
 
 const getStarCount = (rating: number) => {
   return Math.max(0, Math.min(5, Math.round(rating / 2)))

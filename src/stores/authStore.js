@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
 import router from '@/router';
+import { useFavoriteStore, useWatchlistStore } from '@/stores/userStore';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -22,18 +23,20 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true;
 
       try {
-        // Gửi token qua Header Authorization
         const response = await axios.get('http://localhost:3000/api/auth/profile', {
           headers: { Authorization: `Bearer ${this.token}` }
         });
 
         this.user = response.data.user;
-        // Cập nhật lại thông tin user mới nhất vào máy
         localStorage.setItem('user', JSON.stringify(this.user));
+        const favoriteStore = useFavoriteStore();
+        favoriteStore.fetchFavorites();
+        const watchlistStore = useWatchlistStore();
+        watchlistStore.fetchWatchlist();
         return true;
       } catch (err) {
         console.error("Token hết hạn hoặc không hợp lệ");
-        this.logout(); // Xóa sạch dữ liệu nếu token lỗi
+        this.logout();
         return false;
       } finally {
         this.loading = false;
@@ -44,21 +47,13 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true;
       this.error = null;
       try {
-        // Thay URL này bằng URL Backend của bạn sau này
         const response = await axios.post('http://localhost:3000/api/auth/signin', {
           email,
           password
         });
 
         const { user, token } = response.data;
-
-        // Lưu vào state và localStorage
-        this.user = user;
-        this.token = token;
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('token', token);
-
-        // Đăng nhập xong thì chuyển về trang chủ
+        await this.handleAuthSuccess(user, token);
         router.push('/');
         return true;
       } catch (err) {
@@ -75,7 +70,6 @@ export const useAuthStore = defineStore('auth', {
         await axios.post('http://localhost:3000/api/auth/signup', {
           name, email, password
         });
-        // Đăng ký xong có thể chuyển user sang trang Sign In
         return true; 
       } catch (err) {
         this.error = err.response?.data?.message || 'Đăng ký thất bại';
@@ -91,13 +85,9 @@ export const useAuthStore = defineStore('auth', {
         const response = await axios.post('http://localhost:3000/api/auth/facebook-login', {
           accessToken
         });
-        
-        // Lưu thông tin y hệt như đăng nhập thường
-        this.user = response.data.user;
-        this.token = response.data.token;
-        localStorage.setItem('user', JSON.stringify(this.user));
-        localStorage.setItem('token', this.token);
-        
+
+        const { user, token } = response.data;
+        await this.handleAuthSuccess(user, token);
         return true;
       } catch (err) {
         this.error = "Xác thực Facebook thất bại!";
@@ -113,10 +103,8 @@ export const useAuthStore = defineStore('auth', {
         const response = await axios.post('http://localhost:3000/api/auth/google-login', {
           credential
         });
-        this.user = response.data.user;
-        this.token = response.data.token;
-        localStorage.setItem('user', JSON.stringify(this.user));
-        localStorage.setItem('token', this.token);
+        const { user, token } = response.data;
+        await this.handleAuthSuccess(user, token);
         return true;
       } catch (err) {
         this.error = "Google Login thất bại!";
@@ -132,6 +120,19 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       router.push('/auth/signin');
-    }
+    },
+
+    async handleAuthSuccess(user, token) {
+      this.user = user;
+      this.token = token;
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', token);
+      const favoriteStore = useFavoriteStore();
+      await favoriteStore.fetchFavorites(); 
+      const watchlistStore = useWatchlistStore();
+      await watchlistStore.fetchWatchlist();
+      router.push('/');
+    },
+
   }
 });

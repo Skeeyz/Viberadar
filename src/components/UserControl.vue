@@ -1,24 +1,23 @@
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+<script setup lang="ts">
+import { ref } from 'vue';
 import { useAuthStore } from '@/stores/authStore.js';
 import { ChevronDown, User, Heart, Bookmark, LogOut } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
 const isDropdownOpen = ref(false);
 
-const toggleDropdown = () => {
-  isDropdownOpen.value = !isDropdownOpen.value;
+const handleMouseEnter = () => {
+  isDropdownOpen.value = true;
 };
 
-// Đóng dropdown khi click ra ngoài
-const closeDropdown = (e) => {
-  if (!e.target.closest('.user-control')) {
-    isDropdownOpen.value = false;
-  }
+// Hàm đóng khi di chuột ra
+const handleMouseLeave = () => {
+  isDropdownOpen.value = false;
 };
 
-onMounted(() => window.addEventListener('click', closeDropdown));
-onUnmounted(() => window.removeEventListener('click', closeDropdown));
+defineOptions({
+  name: "UserControl"
+})
 
 const handleLogout = () => {
   authStore.logout();
@@ -27,9 +26,12 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <div class="user-control">
-    <div class="user-info" @click.stop="toggleDropdown">
-      <div class="avatar-wrapper">
+  <div 
+    class="user-control" 
+    @mouseenter="handleMouseEnter" 
+    @mouseleave="handleMouseLeave"
+  >
+    <div class="user-info"> <div class="avatar-wrapper">
         <img 
           :src="authStore.user?.avatar || 'https://ui-avatars.com/api/?name=' + authStore.user?.name" 
           alt="Avatar" 
@@ -113,7 +115,7 @@ const handleLogout = () => {
 /* Dropdown */
 .user-dropdown {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 10px); 
   right: 0;
   background: #111;
   border: 1px solid #333;
@@ -121,7 +123,18 @@ const handleLogout = () => {
   min-width: 200px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.5);
   z-index: 100;
-  overflow: hidden;
+  overflow: visible; 
+}
+
+
+.user-dropdown::before {
+  content: "";
+  position: absolute;
+  top: -15px; 
+  left: 0;
+  width: 100%;
+  height: 15px;
+  background: transparent;
 }
 
 .dropdown-item {

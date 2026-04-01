@@ -34,6 +34,11 @@ const routes = [
         meta: { requiresAuth: true }
       },
       {
+        path: 'profile',
+        component: () => import('@/views/ProfileView.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
         path: 'search',
         component: SearchResult
       }],
@@ -67,20 +72,18 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  // Lấy token từ LocalStorage
   const token = localStorage.getItem('token');
   
   // Nếu vào trang yêu cầu đăng nhập (Home) mà chưa có token
   if (to.meta.requiresAuth && !token) {
-    return next('/auth/signin');
+    return '/auth/signin';
   }
 
-  // Nếu đã có token (đã đăng nhập) mà vẫn muốn vào trang Sign In/Sign Up
   if (to.path.startsWith('/auth') && token) {
-    return next('/'); // Đẩy về Home
+    return '/';
   }
 
-  next(); // Cho đi tiếp bình thường
+  next();
 });
 
 export default router

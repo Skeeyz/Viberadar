@@ -5,6 +5,7 @@
       v-for="movie in movies"
       :key="movie.id"
       :movie="movie"
+      :viewType='props.viewType'
     />
   </div>
 </section>
@@ -21,11 +22,14 @@ interface Movie {
   rating: number
   description: string
   genres: string[]
+  type: 'movie' | 'tv'
 }
 
-defineProps<{
-  movies: Movie[]
+const props = defineProps<{
+  movies: Movie[],
+  viewType?: 'home' | 'favorites' | 'watchlist'
 }>()
+
 </script>
 
 <style scoped>

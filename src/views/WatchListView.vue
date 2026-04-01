@@ -1,230 +1,472 @@
 <template>
-  <div class="favorite-page-container">
-    <div class="favorite-card-frame">
-      <h1 class="favorite-title">
-        <span class="title-text">My Watchlist</span>
-      </h1>
+  <div class="favorite-page-container"> <header class="page-header">
+      <div class="title-section">
+        <h1 class="main-title">My Watchlist</h1>
+        <div class="count-badge" v-if="filteredMovies.length > 0">
+          {{ filteredMovies.length }} movies to watch
+        </div>
+      </div>
 
       <div class="toolbar">
         <div class="filter-group">
-          <div class="filter-select">Genres <ChevronDown size="14" /></div>
-          <div class="filter-select">Status <ChevronDown size="14" /></div>
-          <div class="filter-select">Rating <ChevronDown size="14" /></div>
+          <div class="dropdown-wrapper">
+            <div class="filter-trigger">
+              Genres <ChevronDown size="14" class="icon-arrow" />
+            </div>
+            <div class="dropdown-content glass-ui">
+              <div class="genre-grid">
+                <button class="chip" @click="resetGenres" :class="{ active: selectedGenres.length === 0 }">
+                  All Genres
+                </button>
+                <button 
+                  v-for="genre in availableGenres" 
+                  :key="genre" 
+                  class="chip" 
+                  @click="toggleGenre(genre)"
+                >
+                  + {{ genre }}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="dropdown-wrapper">
+            <div class="filter-trigger">
+              Sort: <span class="current-val">{{ sortBy === 'desc' ? 'Recently Added' : 'Oldest' }}</span>
+              <ChevronDown size="14" class="icon-arrow" />
+            </div>
+            <div class="dropdown-content glass-ui sort-mini">
+              <div class="sort-opt" :class="{ active: sortBy === 'desc' }" @click="sortBy = 'desc'">
+                <Clock size="14" /> Recently Added
+              </div>
+              <div class="sort-opt" :class="{ active: sortBy === 'asc' }" @click="sortBy = 'asc'">
+                <History size="14" /> Oldest Added
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="search-box">
-          <input 
-            type="text" 
-            placeholder="Search Watchlist..." 
-            v-model="searchQuery"
-          />
           <Search size="18" class="search-icon" />
+          <input type="text" placeholder="Search in watchlist..." v-model="searchQuery" />
         </div>
       </div>
+    </header>
 
-      <div class="status-bar">
-        <div class="tags-list">
-          <span class="active-tag">To Watch <X size="14" class="btn-close-tag" /></span>
-        </div>
+    <div class="tags-row">
+      <transition-group name="tag-list">
+        <span v-for="genre in selectedGenres" :key="genre" class="active-tag-chip">
+          {{ genre }} 
+          <X size="14" class="close-tag-icon" @click="toggleGenre(genre)" />
+        </span>
+      </transition-group>
+    </div>
+
+    <main class="content-section">
+      <div v-if="isLoading" class="state-ui">
+        <div class="loader"></div>
+        <p>Syncing your watchlist...</p>
+      </div>
+
+      <div v-else-if="paginatedMovies.length === 0" class="state-ui">
+        <div class="empty-icon">📺</div>
+        <p>Your watchlist is empty. Find some great movies to save for later!</p>
+      </div>
+
+      <MovieGrid 
+        v-else 
+        :movies="paginatedMovies"
+        :viewType="viewType"
+      />
+    </main>
+
+    <footer class="page-footer" v-if="totalPages > 1">
+      <div class="pagination">
+        <button class="p-btn" :disabled="currentPage === 1" @click="currentPage--">
+          <ChevronLeft size="18" />
+        </button>
         
-        <div class="sort-box">
-          <span class="sort-label">Sort by:</span>
-          <div class="filter-select">Recently Added <ChevronDown size="14" /></div>
-        </div>
+        <button 
+          v-for="page in totalPages" 
+          :key="page" 
+          class="p-num" 
+          :class="{ active: currentPage === page }"
+          @click="currentPage = page"
+        >
+          {{ page }}
+        </button>
+
+        <button class="p-btn" :disabled="currentPage === totalPages" @click="currentPage++">
+          <ChevronRight size="18" />
+        </button>
       </div>
-
-      <div class="movie-display-section">
-        <div v-if="isLoading" class="state-message">
-          <div class="loader"></div>
-          <p>Loading your watchlist...</p>
-        </div>
-
-        <div v-else-if="watchlistMovies.length === 0" class="state-message">
-          <p>Your watchlist is empty. Add some movies to watch later!</p>
-        </div>
-
-        <MovieGrid 
-          v-else 
-          :movies="filteredMovies" 
-          @remove="removeFromList"
-        />
-      </div>
-
-      <div v-if="watchlistMovies.length > 0" class="pagination-wrapper">
-        <button class="nav-btn"><ChevronLeft size="18" /></button>
-        <button class="page-link active">1</button>
-        <span class="page-spacer">...</span>
-        <button class="nav-btn"><ChevronRight size="18" /></button>
-      </div>
-    </div>
-
-    <div class="footer-hint">
-      Planning a movie marathon? <router-link to="/" class="highlight-link">Discover more!</router-link>
-    </div>
+    </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { ChevronDown, Search, X, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { ref, onMounted, computed, watch } from 'vue';
+import { ChevronDown, Search, X, ChevronLeft, ChevronRight, Clock, History } from 'lucide-vue-next';
 import MovieGrid from '@/components/MovieGrid.vue';
-import { userService } from '@/services/userService';
+import { useWatchlistStore } from '@/stores/userStore';
 
+const watchlistStore = useWatchlistStore();
+const viewType = "watchlist"; // Định danh để MovieCard biết đang ở chế độ nào
 const searchQuery = ref('');
-const watchlistMovies = ref([]);
-const isLoading = ref(false);
+const selectedGenres = ref<string[]>([]);
+const sortBy = ref('desc');
+const currentPage = ref(1);
+const itemsPerPage = 15;// Số movie các xuất hiện trong 1 pagination
 
-const loadWatchlist = async () => {
-  isLoading.value = true;
-  try {
-    // Gọi hàm getWatchlist thay vì getFavorites
-    const data = await userService.getWatchlist();
-    
-    watchlistMovies.value = data.movies.map((movie: any) => {
-      // Logic mapping tương tự như Favorite
-      const finalPoster = movie.poster || (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '');
+// Lấy dữ liệu từ Watchlist Store
+const watchlistMovies = computed(() => watchlistStore.watchlist);
+const isLoading = computed(() => watchlistStore.loading);
 
-      return {
-        id: movie.id || movie.tmdb_id,
-        title: movie.title,
-        poster: finalPoster || 'https://placehold.co/500x750?text=No+Poster',
-        type: movie.type || movie.media_type,
-        rating: movie.rating || 0,
-        year: movie.year || (movie.added_at ? new Date(movie.added_at).getFullYear() : 2024)
-      };
-    });
-    console.log("Watchlist loaded:", watchlistMovies.value);
-  } catch (error) {
-    console.error("Lỗi khi tải Watchlist:", error);
-  } finally {
-    isLoading.value = false;
-  }
-};
+const allGenres = ['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family', 'Fantasy', 'History', 'Horror', 'Music', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western'];
 
-const filteredMovies = computed(() => {
-  if (!searchQuery.value) return watchlistMovies.value;
-  return watchlistMovies.value.filter((m: any) => 
-    m.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
+const availableGenres = computed(() => allGenres.filter(g => !selectedGenres.value.includes(g)));
+
+// Watchers
+watch(currentPage, () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-const removeFromList = async (movieId: number) => {
-  try {
-    // Bạn có thể dùng chung hàm xóa hoặc tạo hàm riêng tùy Backend
-    await userService.removeFavorite(movieId); // Hoặc userService.removeWatchlist nếu bạn đã tách
-    watchlistMovies.value = watchlistMovies.value.filter(m => m.id !== movieId);
-  } catch (error) {
-    alert("Không thể xóa khỏi danh sách chờ!");
-  }
+watch([searchQuery, selectedGenres, sortBy], () => { 
+  currentPage.value = 1; 
+});
+
+// Methods
+const toggleGenre = (genre: string) => {
+  const index = selectedGenres.value.indexOf(genre);
+  if (index > -1) selectedGenres.value.splice(index, 1);
+  else selectedGenres.value.push(genre);
 };
 
-onMounted(loadWatchlist);
+const resetGenres = () => selectedGenres.value = [];
+
+// Filtering & Sorting Logic
+const filteredMovies = computed(() => {
+  if (!watchlistMovies.value) return [];
+
+  let results = watchlistMovies.value.filter((m: any) => {
+    const title = m.title || m.name || '';
+    const matchSearch = title.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const movieGenres = m.genres || [];
+    const matchGenres = selectedGenres.value.length === 0 
+      ? true 
+      : selectedGenres.value.every(g => movieGenres.includes(g));
+    
+    return matchSearch && matchGenres;
+  });
+
+  return results.sort((a, b) => {
+    const dateA = a.addedAt ? new Date(a.addedAt).getTime() : 0;
+    const dateB = b.addedAt ? new Date(b.addedAt).getTime() : 0;
+    return sortBy.value === 'desc' ? dateB - dateA : dateA - dateB;
+  });
+});
+
+const totalPages = computed(() => Math.ceil(filteredMovies.value.length / itemsPerPage));
+const paginatedMovies = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return filteredMovies.value.slice(start, start + itemsPerPage);
+});
+
+onMounted(async () => {
+  await watchlistStore.fetchWatchlist();
+});
 </script>
 
 <style scoped>
-/* Reuse lại toàn bộ CSS của FavoriteView để đảm bảo tính đồng bộ (Consistency) */
 .favorite-page-container {
-  width: 90%;
-  margin: 40px auto 0;
+  max-width: 95%; 
+  margin: 0 auto;
+  padding: 40px 10px; 
+  color: #fff;
+  min-height: 100vh;
+  transition: max-width 0.3s ease;
 }
 
-.favorite-card-frame {
-  position: relative;
-  border: 2px solid rgba(34, 211, 238, 0.5);
-  border-radius: 20px;
-  background: rgba(15, 23, 42, 0.4);
-  padding: 60px 40px 40px;
-  backdrop-filter: blur(8px);
-  min-height: 500px;
-}
-
-.favorite-title {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, -50%);
+/* --- Header & Typography --- */
+.page-header {
   display: flex;
-  align-items: center;
-  white-space: nowrap;
-  z-index: 10;
+  flex-direction: column;
+  gap: 30px;
+  margin-bottom: 40px;
 }
 
-.title-text {
-  color: #22d3ee;
-  font-size: 26px;
+.title-section {
+  display: flex;
+  align-items: baseline;
+  gap: 15px;
+}
+
+.main-title {
+  font-size: 32px;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 4px;
-  padding: 0 20px;
-  background: radial-gradient(circle at top, rgba(245, 158, 11, 0.12), transparent 100%),
-              linear-gradient(180deg, #08111f 0%, #0b1424 38%);
+  letter-spacing: -0.5px;
+  background: linear-gradient(to right, #fff, #22d3ee);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
+.count-badge {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* --- Toolbar --- */
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
 }
 
-.filter-group { display: flex; gap: 30px; }
-.filter-select {
+.filter-group {
+  display: flex;
+  gap: 40px;
+}
+
+.dropdown-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #94a3b8;
-  font-size: 15px;
-  cursor: pointer;
 }
 
+.filter-trigger {
+  color: #94a3b8;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.current-val { color: #22d3ee; }
+
+/* Bridge for smooth hover */
+.dropdown-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: 20px;
+}
+
+.dropdown-content {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px) translateZ(0);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dropdown-wrapper:hover .dropdown-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* --- Polished UI Elements --- */
+.glass-ui {
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+  padding: 24px;
+  width: 480px;
+}
+
+.sort-mini { width: 220px; padding: 10px; right: 0; left: auto; }
+
+/* --- Genre Grid & Chips --- */
+.genre-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
+
+.chip:hover {
+  background: rgba(34, 211, 238, 0.1);
+  border-color: rgba(34, 211, 238, 0.4);
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(34, 211, 238, 0.15);
+}
+
+.chip.active {
+  background: #22d3ee;
+  color: #0f172a;
+  border-color: #22d3ee;
+}
+
+/* --- Sort Options --- */
+.sort-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: #94a3b8;
+  font-size: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sort-opt:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  transform: translateX(6px);
+}
+
+.sort-opt.active {
+  background: rgba(34, 211, 238, 0.1);
+  color: #22d3ee;
+  font-weight: 700;
+}
+
+/* --- Search Box --- */
 .search-box {
   position: relative;
-  width: 300px;
+  width: 320px;
 }
 
 .search-box input {
   width: 100%;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid #334155;
-  color: white;
-  padding: 8px 30px 8px 5px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 14px;
+  padding: 14px 16px 14px 48px;
+  color: #fff;
   outline: none;
+  transition: all 0.3s ease;
 }
 
-.search-icon { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); color: #475569; }
+.search-box input:focus {
+  border-color: #22d3ee;
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.1);
+}
 
-.status-bar {
+.search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #475569;
+}
+
+/* --- Active Tags --- */
+.tags-row {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 40px;
+  min-height: 40px;
 }
 
-.active-tag {
-  border: 1px solid #22d3ee;
+.active-tag-chip {
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.3);
   color: #22d3ee;
-  padding: 5px 15px;
-  border-radius: 8px;
-  margin-right: 12px;
-  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 13px;
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  box-shadow: 0 4px 15px rgba(34, 211, 238, 0.1);
 }
 
-.movie-display-section {
-  min-height: 300px;
+/* --- Content Section --- */
+.content-section {
+  min-height: 400px;
 }
 
-.state-message {
+.state-ui {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 300px;
-  color: #64748b;
+  padding: 100px 0;
+  color: #475569;
   gap: 20px;
 }
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+/* --- Pagination --- */
+.page-footer {
+  margin-top: 60px;
+  padding-bottom: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(30, 41, 59, 0.5);
+  padding: 6px;
+  border-radius: 14px;
+}
+
+.p-btn, .p-num {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.p-num.active {
+  background: #22d3ee;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.p-btn:hover:not(:disabled), .p-num:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.p-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* --- Animations --- */
+.list-enter-active, .list-leave-active { transition: all 0.4s ease; }
+.list-enter-from, .list-leave-to { opacity: 0; transform: scale(0.9); }
 
 .loader {
   width: 40px;
@@ -237,29 +479,8 @@ onMounted(loadWatchlist);
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.pagination-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-top: 30px;
-}
+.icon-arrow { transition: transform 0.3s ease; }
+.dropdown-wrapper:hover .icon-arrow { transform: rotate(180deg); color: #22d3ee; }
 
-.page-link, .nav-btn {
-  width: 42px; height: 42px;
-  border-radius: 12px;
-  border: 1px solid #1e293b;
-  background: #0f172a;
-  color: #94a3b8;
-  cursor: pointer;
-}
 
-.page-link.active {
-  border-color: #22d3ee;
-  color: #22d3ee;
-  background: rgba(34, 211, 238, 0.1);
-}
-
-.footer-hint { text-align: center; margin-top: 35px; color: #475569; }
-.highlight-link { color: #f59e0b; text-decoration: none; font-weight: bold; margin-left: 6px; }
 </style>
