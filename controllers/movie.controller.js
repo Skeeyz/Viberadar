@@ -184,3 +184,28 @@ export const toggleWatchlist = async (req, res) => {
     res.status(500).json({ message: "Lỗi xử lý danh sách theo dõi" });
   }
 };
+
+export const updateProfileName = async (req, res) => {
+  const {newUserName} = req.body;
+  const userId = req.user.id;
+
+  try {
+    const [existing] = await db.execute(
+      'SELECT id FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (existing.length > 0) {
+      await db.execute(
+        'UPDATE users SET name = ? WHERE id = ?', 
+        [newUserName, userId]
+      );
+      return res.json({ message: "Đã cập nhật tên người dùng", status: 'updated' });
+    } else {
+      return res.json({ message: "Tài khoản không tồn tại trong hệ thống", status: 'updated' });
+    }
+  } catch (error) {
+    console.error("Lỗi updateProfileName:", error);
+    res.status(500).json({ message: "Lỗi xử lý cập nhật hồ sơ người dùng" });
+  }
+};

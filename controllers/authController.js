@@ -79,7 +79,6 @@ export const googleLogin = async (req, res) => {
   }
 };
 
-// ĐÂY LÀ HÀM MỚI CHO AUTO LOGIN
 export const getProfile = async (req, res) => {
   try {
     const [rows] = await db.query('SELECT id, name, email, avatar FROM users WHERE id = ?', [req.userId]);

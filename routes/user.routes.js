@@ -12,5 +12,7 @@ router.post('/user/favorites/toggle', verifyToken, movieController.toggleFavorit
 // 2. Routes cho Watchlist
 router.get('/watchlist', verifyToken, movieController.getWatchlist);
 router.post('/user/watchlist/toggle', verifyToken, movieController.toggleWatchlist);
+//3 . Routes cho Profile
+router.post('/user/profile/update', verifyToken, movieController.updateProfileName);
 
 export default router;
