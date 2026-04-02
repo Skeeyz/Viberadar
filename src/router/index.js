@@ -74,16 +74,15 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token');
   
-  // Nếu vào trang yêu cầu đăng nhập (Home) mà chưa có token
   if (to.meta.requiresAuth && !token) {
-    return '/auth/signin';
+    return next('/auth/signin');
   }
 
   if (to.path.startsWith('/auth') && token) {
-    return '/';
+    return next('/');
   }
 
-  next();
+  return next();
 });
 
 export default router

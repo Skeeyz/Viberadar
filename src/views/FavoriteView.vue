@@ -64,10 +64,13 @@
     </div>
 
     <main class="content-section">
-      <div v-if="isLoading" class="state-ui">
+      <div v-if="isLoading" class="state-ui skeleton-grid" aria-busy="true" aria-label="Loading movies">
+        <MovieCardSkeleton v-for="i in 5" :key="i" />
+      </div>
+      <!-- <div v-if="isLoading" class="state-ui">
         <div class="loader"></div>
         <p>Updating your collection...</p>
-      </div>
+      </div> -->
 
       <div v-else-if="paginatedMovies.length === 0" class="state-ui">
         <div class="empty-icon">📺</div>
@@ -110,8 +113,9 @@ import Swal from 'sweetalert2'
 import { ref, onMounted, computed, watch } from 'vue';
 import { ChevronDown, Search, X, ChevronLeft, ChevronRight, Clock, History } from 'lucide-vue-next';
 import MovieGrid from '@/components/MovieGrid.vue';
+import MovieCardSkeleton from '@/components/MovieCardSkeleton.vue'
 import { userService } from '@/services/userService';
-import { useFavoriteStore } from '@/stores/userStore'
+import { useFavoriteStore } from '@/stores/userStore';
 
 const favoriteStore = useFavoriteStore();
 const viewType = "favorites";
@@ -167,6 +171,7 @@ const paginatedMovies = computed(() => {
 watch([searchQuery, selectedGenres, sortBy], () => { currentPage.value = 1; });
 
 const loadFavorites = async () => {
+  // await sleep(5000);
   await favoriteStore.fetchFavorites();
 };
 
@@ -409,6 +414,12 @@ onMounted(loadFavorites);
   padding: 100px 0;
   color: #475569;
   gap: 20px;
+}
+
+.skeleton-grid {
+  display: grid;
+  gap: 28px 22px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
 .empty-icon {

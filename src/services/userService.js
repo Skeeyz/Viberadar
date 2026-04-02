@@ -17,7 +17,6 @@ api.interceptors.request.use((config) => {
 });
 
 export const userService = {
-  // 1. Lấy thông tin cá nhân (để hiện ở UserControl)
   async getProfile() {
     const response = await api.get('/auth/profile');
     return response.data;
@@ -28,8 +27,8 @@ export const userService = {
     try {
       const response = await api.get('/favorites');
       
-      console.log("--- DỮ LIỆU SẠCH TỪ BACKEND ---");
-      console.table(response.data.movies); 
+      // console.log("--- DỮ LIỆU SẠCH TỪ BACKEND ---");
+      // console.table(response.data.movies); 
 
       const movies = response.data.movies.map(item => ({
         id: item.id,
@@ -50,17 +49,6 @@ export const userService = {
     }
   },
 
-  // 3. Thêm phim vào danh sách yêu thích
-  async addFavorite(movieData) {
-    const response = await api.post('/favorites', movieData);
-    return response.data;
-  },
-
-  // 4. Xóa phim khỏi danh sách yêu thích (Nút X hoặc nút Tim)
-  async removeFavorite(tmdbId) {
-    return await api.delete(`/user/favorites/${tmdbId}`);
-  },
-
   async toggleFavorite({ tmdbId, mediaType }) {
     // Chỉ gửi duy nhất ID phim lên để Backend xử lý
     const response = await api.post('/user/favorites/toggle', { tmdb_id: tmdbId , media_type: mediaType});
@@ -73,8 +61,8 @@ export const userService = {
     try {
       const response = await api.get('/watchlist');
       
-      console.log("--- DỮ LIỆU SẠCH TỪ BACKEND ---");
-      console.table(response.data.movies); 
+      // console.log("--- DỮ LIỆU SẠCH TỪ BACKEND ---");
+      // console.table(response.data.movies); 
 
       const movies = response.data.movies.map(item => ({
         id: item.id,
@@ -98,5 +86,10 @@ export const userService = {
   async toggleWatchlist({ tmdbId, mediaType }) {
     const response = await api.post('/user/watchlist/toggle', { tmdb_id: tmdbId , media_type: mediaType });
     return response.data;
-  }
+  },
+
+  async updateProfileName(newUserName){
+    const response = await api.post('/user/profile/update', {newUserName : newUserName});
+    return response.data;
+  },
 };

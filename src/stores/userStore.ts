@@ -89,7 +89,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
   }
 
   return {favorites, loading, fetchFavorites, toggleFavorite, isFavorite};
-})
+});
 
 export const useWatchlistStore = defineStore('watchlist', () => {
   const authStore = useAuthStore()
@@ -173,4 +173,68 @@ export const useWatchlistStore = defineStore('watchlist', () => {
   const isInWatchlist = (id: number) => watchlist.value.some(m => m.id === id)
 
   return { watchlist, loading, fetchWatchlist, toggleWatchlist, isInWatchlist }
-})
+});
+
+export const useProfileStore = defineStore('profile', () => {
+  const authStore = useAuthStore()
+  const loading = ref(false)
+  const updateProfileName = async (newName: string) =>{
+    if (!authStore.isAuthenticated) {
+      const result = await Swal.fire({
+        title: 'Yêu cầu đăng nhập',
+        text: 'Bạn cần đăng nhập để sử dụng tính năng này!',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Đăng nhập',
+        confirmButtonColor: '#22d3ee'
+      });
+      
+      if (result.isConfirmed) {
+        router.push('/auth/signin');
+      }
+      return;
+    }
+    const confirmResult = await Swal.fire({
+            title: 'Cập nhật tên người dùng?',
+            text: `Bạn có chắc muốn đổi tên thành "${newName}" không?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Đổi luôn',
+            cancelButtonText: 'Giữ lại',
+            reverseButtons: true 
+        });
+    if(confirmResult.isConfirmed){
+      try{
+        loading.value=true;
+        const result = await userService.updateProfileName(newName);
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        Toast.fire({
+            icon: 'success',
+            title: 'Tên người dùng đã được cập nhật'
+        });
+      }
+      catch(error){
+        Swal.fire('Lỗi', 'Không thể cập nhật tên người dùng', 'error');
+      }
+      finally{
+        loading.value=false;
+      }
+    }
+    else
+      return;
+  }
+  return {loading, updateProfileName};
+});

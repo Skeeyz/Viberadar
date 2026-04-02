@@ -63,10 +63,13 @@
     </div>
 
     <main class="content-section">
-      <div v-if="isLoading" class="state-ui">
+      <div v-if="isLoading" class="state-ui skeleton-grid" aria-busy="true" aria-label="Loading movies">
+        <MovieCardSkeleton v-for="i in 5" :key="i" />
+      </div>
+      <!-- <div v-if="isLoading" class="state-ui">
         <div class="loader"></div>
         <p>Syncing your watchlist...</p>
-      </div>
+      </div> -->
 
       <div v-else-if="paginatedMovies.length === 0" class="state-ui">
         <div class="empty-icon">📺</div>
@@ -108,6 +111,7 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { ChevronDown, Search, X, ChevronLeft, ChevronRight, Clock, History } from 'lucide-vue-next';
 import MovieGrid from '@/components/MovieGrid.vue';
+import MovieCardSkeleton from '@/components/MovieCardSkeleton.vue'
 import { useWatchlistStore } from '@/stores/userStore';
 
 const watchlistStore = useWatchlistStore();
@@ -412,6 +416,12 @@ onMounted(async () => {
   padding: 100px 0;
   color: #475569;
   gap: 20px;
+}
+
+.skeleton-grid {
+  display: grid;
+  gap: 28px 22px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
 .empty-icon {

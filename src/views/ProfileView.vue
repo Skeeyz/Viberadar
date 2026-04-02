@@ -77,12 +77,13 @@
 import { ref, computed, onMounted } from 'vue';
 import { Camera, Mail, User } from 'lucide-vue-next';
 import { useAuthStore } from '@/stores/authStore';
-import { useFavoriteStore, useWatchlistStore } from '@/stores/userStore';
+import { useFavoriteStore, useWatchlistStore, useProfileStore } from '@/stores/userStore';
 import Swal from 'sweetalert2';
 
 const authStore = useAuthStore();
 const favoriteStore = useFavoriteStore();
 const watchlistStore = useWatchlistStore();
+const profileStore = useProfileStore()
 
 const user = computed(() => authStore.user);
 const isSaving = ref(false);
@@ -98,22 +99,19 @@ const updateProfile = async () => {
   
   isSaving.value = true;
   try {
-    // Giả lập gọi API update thông tin
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Cập nhật lại user trong store (nếu bạn có action này)
-    // authStore.user.name = formData.value.name;
+    await profileStore.updateProfileName(formData.value.name);
+    authStore.user.name = formData.value.name;
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Profile Updated!',
-      toast: true,
-      position: 'top-end',
-      timer: 2000,
-      showConfirmButton: false,
-      background: '#0f172a',
-      color: '#fff'
-    });
+  //   Swal.fire({
+  //     icon: 'success',
+  //     title: 'Profile Updated!',
+  //     toast: true,
+  //     position: 'top-end',
+  //     timer: 2000,
+  //     showConfirmButton: false,
+  //     background: '#0f172a',
+  //     color: '#fff'
+  //   });
   } catch (error) {
     Swal.fire('Error', 'Something went wrong!', 'error');
   } finally {
