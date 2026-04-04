@@ -88,3 +88,22 @@ export const getProfile = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server' });
   }
 };
+
+export const changePassword = async (req, res) => {
+  const { password, newPassword } = req.body;
+  const userId = req.user.id;
+  try {
+    const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+    if (rows.length === 0) return res.status(401).json({ message: 'Tài khoản không tồn tại!' });
+
+    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ message: 'Mật khẩu hiện tại không chính xác!' });
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+    res.status(201).json({message: 'Thay đổi mật khẩu thành công!'});
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi server!' });
+  }
+};
+

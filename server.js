@@ -10,7 +10,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Sử dụng các route đã tách
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
 

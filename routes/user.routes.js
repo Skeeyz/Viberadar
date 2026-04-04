@@ -1,7 +1,5 @@
 import express from 'express';
-// Import toàn bộ movieController theo dạng object
 import * as movieController from '../controllers/movie.controller.js';
-// Import Named Export từ middleware (nhớ dùng ngoặc nhọn)
 import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
