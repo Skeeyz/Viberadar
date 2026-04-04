@@ -236,5 +236,64 @@ export const useProfileStore = defineStore('profile', () => {
     else
       return;
   }
-  return {loading, updateProfileName};
+
+  const changePassword = async (currentPassword: string, confirmPassword: string) =>{
+    if (!authStore.isAuthenticated) {
+      const result = await Swal.fire({
+        title: 'Yêu cầu đăng nhập',
+        text: 'Bạn cần đăng nhập để sử dụng tính năng này!',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Đăng nhập',
+        confirmButtonColor: '#22d3ee'
+      });
+      
+      if (result.isConfirmed) {
+        router.push('/auth/signin');
+      }
+      return;
+    }
+    const confirmResult = await Swal.fire({
+            title: 'Thay đổi mật khẩu?',
+            text: `Bạn có chắc muốn đổi mật khẩu mới không?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Đổi luôn',
+            cancelButtonText: 'Giữ lại',
+            reverseButtons: true 
+        });
+    if(confirmResult.isConfirmed){
+      try{
+        loading.value=true;
+        const result = await userService.changePassword({password: currentPassword, newPassword: confirmPassword});
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        Toast.fire({
+            icon: 'success',
+            title: 'Mật khẩu đã được thay đổi'
+        });
+      }
+      catch(error){
+        Swal.fire('Lỗi', 'Mật khẩu hiện tại không chính xác', 'error');
+      }
+      finally{
+        loading.value=false;
+      }
+    }
+    else
+      return;
+  }
+  return {loading, updateProfileName, changePassword};
 });

@@ -1,122 +1,306 @@
 <template>
   <div class="profile-page">
     <div class="profile-container">
-      <div class="profile-card glass-ui">
-        <div class="profile-header">
-          <div class="cover-photo"></div>
-          <div class="avatar-section">
-            <div class="avatar-wrapper">
-              <img 
-                :src="user?.avatar || 'https://ui-avatars.com/api/?name=' + user?.name" 
-                alt="User Avatar" 
-              />
-              <button class="edit-avatar-btn" title="Change Avatar">
-                <Camera size="18" />
-              </button>
+      <transition name="page-fade" appear>
+        <div class="profile-card glass-ui">
+          
+          <div class="profile-header">
+            <div class="cover-photo"></div>
+            <div class="avatar-section">
+              <div class="avatar-wrapper shadow-pop">
+                <div class="avatar-placeholder" v-if="!isImgLoaded"></div>
+                <img 
+                  :src="user?.avatar || 'https://ui-avatars.com/api/?name=' + user?.name" 
+                  alt="User Avatar"
+                  @load="onImageLoad"
+                  :class="{ 'img-loaded': isImgLoaded }"
+                />
+                <button class="edit-avatar-btn pulse-hover" title="Change Avatar">
+                  <Camera size="18" />
+                </button>
+              </div>
+              <div class="user-meta">
+                <h1 class="user-name">{{ user?.name }}</h1>
+                <p class="user-email">{{ user?.email }}</p>
+              </div>
             </div>
-            <div class="user-meta">
-              <h1 class="user-name">{{ user?.name }}</h1>
-              <p class="user-email">{{ user?.email }}</p>
+          </div>
+
+          <div class="stats-grid">
+            <div 
+              v-for="(stat, index) in stats" 
+              :key="index"
+              class="stat-item" 
+              @click="stat.action"
+              :style="{ '--delay': index * 0.1 + 's' }" 
+            >
+              <span class="stat-value" :class="{ 'loading-shimmer': favoriteStore.loading }">
+                {{ stat.value }}
+              </span>
+              <span class="stat-label">{{ stat.label }}</span>
             </div>
           </div>
-        </div>
 
-        <div class="stats-grid">
-          <div class="stat-item" @click="$router.push('/favorites')">
-            <span class="stat-value">{{ favoriteStore.favorites.length }}</span>
-            <span class="stat-label">Favorites</span>
-          </div>
-          <div class="stat-item" @click="$router.push('/watchlist')">
-            <span class="stat-value">{{ watchlistStore.watchlist.length }}</span>
-            <span class="stat-label">Watchlist</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">Active</span>
-            <span class="stat-label">Member</span>
-          </div>
-        </div>
+          <div class="profile-content">
+            
+            <div class="section-header">
+              <h2 class="section-title">Account Settings</h2>
+              <div class="badge-status">Verified Account</div>
+            </div>
+            
+            <form @submit.prevent="updateProfile" class="settings-form">
+              <div class="input-group staggered" style="--delay: 0.3s">
+                <label class="field-label">Display Name</label>
+                <div class="input-wrapper" :class="{ 'is-focused': activeField === 'name' }">
+                  <User size="18" class="input-icon" />
+                  <input 
+                    type="text" 
+                    v-model="formData.name" 
+                    @focus="activeField = 'name'"
+                    @blur="activeField = ''"
+                    @input="validateName"
+                    placeholder="Enter your name" 
+                  />
+                </div>
+                <transition name="error-fade">
+                  <p v-if="errors.name" class="error-msg">{{ errors.name }}</p>
+                </transition>
+              </div>
 
-        <div class="profile-content">
-          <div class="section-header">
-            <h2 class="section-title">Account Settings</h2>
-            <div class="badge">Verified</div>
+              <div class="input-group staggered" style="--delay: 0.4s">
+                <label class="field-label">Email Address</label>
+                <div class="input-wrapper disabled-box">
+                  <Mail size="18" class="input-icon" />
+                  <input type="email" :value="user?.email" disabled />
+                </div>
+                <p class="helper-text">Your email is used for login and cannot be changed.</p>
+              </div>
+
+              <div class="form-actions staggered" style="--delay: 0.5s">
+                <button 
+                  type="submit" 
+                  class="save-btn" 
+                  :disabled="isSaving || !isNameChanged || errors.name.trim() !==''"
+                  :class="{ 'btn-ready': isNameChanged && errors.name.trim() ===''  }"
+                >
+                  <span v-if="!isSaving ">Save Changes</span>
+                  <div v-else class="mini-loader"></div>
+                </button>
+              </div>
+            </form>
+
+            <div v-if=" method === 'default' " class="section-divider"></div>
+
+            <div v-if=" method === 'default' " class="section-header">
+              <h2 class="section-title">Security & Password</h2>
+            </div>
+
+            <form v-if=" method === 'default' " @submit.prevent="handleUpdatePassword" class="settings-form">
+              <div class="input-group staggered" style="--delay: 0.6s">
+                <label class="field-label">Current Password</label>
+                <div class="input-wrapper" :class="{ 'is-focused': activeField === 'oldPass' }">
+                  <Lock size="18" class="input-icon" />
+                  <input 
+                    type="password" 
+                    v-model="passwordData.currentPassword" 
+                    @focus="activeField = 'oldPass'"
+                    @blur="activeField = ''"
+                    @input="validatePasswords"
+                    placeholder="••••••••" 
+                  />
+                </div>
+                <transition name="error-fade">
+                  <p v-if="errors.currentPassword" class="error-msg">{{ errors.currentPassword }}</p>
+                </transition>
+              </div>
+
+              <div class="input-grid-row staggered" style="--delay: 0.7s">
+                <div class="input-group">
+                  <label class="field-label">New Password</label>
+                  <div class="input-wrapper" :class="{ 'is-focused': activeField === 'newPass' }">
+                    <Key size="18" class="input-icon" />
+                    <input 
+                      type="password" 
+                      v-model="passwordData.newPassword" 
+                      @focus="activeField = 'newPass'"
+                      @blur="activeField = ''"
+                      @input="validatePasswords"
+                      placeholder="Min 6 characters" 
+                    />
+                  </div>
+                  <transition name="error-fade">
+                    <p v-if="errors.newPassword" class="error-msg">{{ errors.newPassword }}</p>
+                  </transition>
+                </div>
+
+                <div class="input-group">
+                  <label class="field-label">Confirm Password</label>
+                  <div 
+                    class="input-wrapper" 
+                    :class="{ 
+                      'is-focused': activeField === 'confirmPass',
+                      'input-error': passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword 
+                    }"
+                  >
+                    <ShieldCheck size="18" class="input-icon" />
+                    <input 
+                      type="password" 
+                      v-model="passwordData.confirmPassword" 
+                      @focus="activeField = 'confirmPass'"
+                      @blur="activeField = ''"
+                      @input="validatePasswords"
+                      placeholder="Repeat new password" 
+                    />
+                  </div>
+                  <transition name="error-fade">
+                    <p v-if="errors.confirmPassword" class="error-msg">{{ errors.confirmPassword }}</p>
+                  </transition>
+                </div>
+              </div>
+
+              <div class="form-actions staggered" style="--delay: 0.8s">
+                <button 
+                  type="submit" 
+                  class="save-btn secondary-btn" 
+                  :disabled="isSavingPassword || !canUpdatePassword"
+                  :class="{ 'btn-ready-alt': canUpdatePassword }"
+                >
+                  <span v-if="!isSavingPassword">Update Password</span>
+                  <div v-else class="mini-loader"></div>
+                </button>
+              </div>
+            </form>
           </div>
           
-          <form @submit.prevent="updateProfile" class="settings-form">
-            <div class="input-group">
-              <label>Display Name</label>
-              <div class="input-wrapper">
-                <User size="18" class="input-icon" />
-                <input type="text" v-model="formData.name" placeholder="Enter your name" />
-              </div>
-            </div>
-
-            <div class="input-group">
-              <label>Email Address</label>
-              <div class="input-wrapper disabled">
-                <Mail size="18" class="input-icon" />
-                <input type="email" :value="user?.email" disabled />
-              </div>
-              <small class="helper-text">Your email is used for login and cannot be changed.</small>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" class="save-btn" :disabled="isSaving || !isChanged">
-                <span v-if="!isSaving">Update Profile</span>
-                <div v-else class="mini-loader"></div>
-              </button>
-            </div>
-          </form>
         </div>
-      </div>
+      </transition>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Camera, Mail, User } from 'lucide-vue-next';
+import { Camera, Mail, User, Lock, Key, ShieldCheck } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useFavoriteStore, useWatchlistStore, useProfileStore } from '@/stores/userStore';
 import Swal from 'sweetalert2';
 
+const router = useRouter();
 const authStore = useAuthStore();
 const favoriteStore = useFavoriteStore();
 const watchlistStore = useWatchlistStore();
-const profileStore = useProfileStore()
+const profileStore = useProfileStore();
+const method = localStorage.getItem('auth_method');
 
 const user = computed(() => authStore.user);
 const isSaving = ref(false);
+const isSavingPassword = ref(false);
+const isImgLoaded = ref(false);
+const activeField = ref('');
 
+// Form Data
 const formData = ref({
   name: user.value?.name || '',
 });
 
-const isChanged = computed(() => formData.value.name !== user.value?.name);
+const passwordData = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+});
+
+const errors = ref({
+  name: '',
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+});
+
+const validateName = () => {
+  if (formData.value.name.trim().length < 2) {
+    errors.value.name = 'Name must be at least 2 characters';
+  } else {
+    errors.value.name = '';
+  }
+};
+
+const validatePasswords = () => {
+  errors.value.currentPassword = '';
+  errors.value.newPassword = '';
+  errors.value.confirmPassword = '';
+  
+  if (passwordData.value.currentPassword.length > 0 && passwordData.value.currentPassword.length < 6) {
+    errors.value.currentPassword= 'Password must be at least 6 characters';
+  }
+
+  if (passwordData.value.newPassword.length > 0 && passwordData.value.newPassword.length < 6) {
+    errors.value.newPassword = 'Password must be at least 6 characters';
+  }
+
+
+  if (passwordData.value.confirmPassword && passwordData.value.newPassword !== passwordData.value.confirmPassword) {
+    errors.value.confirmPassword = 'Passwords do not match';
+  }
+};
+
+// Computed logic
+const isNameChanged = computed(() => formData.value.name.trim() !== (user.value?.name || '').trim());
+
+const canUpdatePassword = computed(() => {
+  return passwordData.value.currentPassword.length >= 6 && 
+         passwordData.value.newPassword.length >= 6 && 
+         passwordData.value.newPassword === passwordData.value.confirmPassword;
+});
+
+const stats = computed(() => [
+  { label: 'Favorites', value: favoriteStore.favorites.length, action: () => router.push('/favorites') },
+  { label: 'Watchlist', value: watchlistStore.watchlist.length, action: () => router.push('/watchlist') },
+  { label: 'Member', value: 'Active', action: null }
+]);
+
+// Methods
+const onImageLoad = () => {
+  setTimeout(() => isImgLoaded.value = true, 50);
+};
 
 const updateProfile = async () => {
-  if (!isChanged.value) return;
-  
+  if (!isNameChanged.value) return;
   isSaving.value = true;
   try {
     await profileStore.updateProfileName(formData.value.name);
-    authStore.user.name = formData.value.name;
-
-  //   Swal.fire({
-  //     icon: 'success',
-  //     title: 'Profile Updated!',
-  //     toast: true,
-  //     position: 'top-end',
-  //     timer: 2000,
-  //     showConfirmButton: false,
-  //     background: '#0f172a',
-  //     color: '#fff'
-  //   });
+    if (authStore.user) authStore.user.name = formData.value.name;
+    showToast('Profile Updated!');
   } catch (error) {
-    Swal.fire('Error', 'Something went wrong!', 'error');
+    Swal.fire({ icon: 'error', title: 'Error', text: 'Update failed!', background: '#0f172a', color: '#fff' });
   } finally {
     isSaving.value = false;
   }
+};
+
+const handleUpdatePassword = async () => {
+  if (!canUpdatePassword.value) return;
+  isSavingPassword.value = true;
+  try {
+    await profileStore.changePassword(passwordData.value.currentPassword, passwordData.value.confirmPassword);
+    passwordData.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
+  } catch (error) {
+    Swal.fire({ icon: 'error', title: 'Error', text: 'Incorrect current password!', background: '#0f172a', color: '#fff' });
+  } finally {
+    isSavingPassword.value = false;
+  }
+};
+
+const showToast = (title: string) => {
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 2000,
+    background: '#0f172a',
+    color: '#fff',
+  });
+  Toast.fire({ icon: 'success', title });
 };
 
 onMounted(() => {
@@ -126,10 +310,11 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* --- Layout & Reset --- */
 .profile-page {
   min-height: 100vh;
   padding: 60px 20px;
-  background: radial-gradient(circle at top right, rgba(34, 211, 238, 0.05), transparent);
+  background: radial-gradient(circle at top right, rgba(34, 211, 238, 0.08), transparent);
 }
 
 .profile-container {
@@ -146,7 +331,7 @@ onMounted(() => {
   box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.6);
 }
 
-/* Header & Avatar */
+/* --- Header & Identity --- */
 .cover-photo {
   height: 180px;
   background: linear-gradient(135deg, #0f172a 0%, #164e63 50%, #22d3ee 100%);
@@ -170,11 +355,27 @@ onMounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.avatar-placeholder {
+  position: absolute;
+  inset: 6px;
+  background: #1e293b;
+  border-radius: 30px;
+  z-index: 1;
+}
+
 .avatar-wrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 30px;
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.avatar-wrapper img.img-loaded {
+  opacity: 1;
 }
 
 .edit-avatar-btn {
@@ -191,16 +392,15 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  z-index: 10;
   box-shadow: 0 8px 20px rgba(34, 211, 238, 0.3);
   transition: 0.3s;
 }
 
-.edit-avatar-btn:hover { transform: scale(1.1) rotate(10deg); }
+.user-meta .user-name { font-size: 32px; font-weight: 800; color: #fff; margin: 0; }
+.user-meta .user-email { color: #64748b; font-size: 15px; margin: 4px 0 0 0; }
 
-.user-meta .user-name { font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -1px; }
-.user-meta .user-email { color: #64748b; font-size: 15px; }
-
-/* Stats */
+/* --- Stats Grid --- */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -213,23 +413,27 @@ onMounted(() => {
   text-align: center;
   padding: 24px;
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.03);
   border-radius: 24px;
   cursor: pointer;
-  transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .stat-item:hover {
-  background: rgba(34, 211, 238, 0.05);
-  border-color: rgba(34, 211, 238, 0.2);
-  transform: translateY(-8px);
+  background: rgba(34, 211, 238, 0.08);
+  transform: translateY(-5px);
 }
 
-.stat-value { display: block; font-size: 28px; font-weight: 800; color: #22d3ee; margin-bottom: 4px; }
+.stat-value { display: block; font-size: 28px; font-weight: 800; color: #22d3ee; }
 .stat-label { font-size: 13px; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; }
 
-/* Form Settings */
+/* --- Form Shared --- */
 .profile-content { padding: 48px; }
+
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  margin: 40px 0;
+}
 
 .section-header {
   display: flex;
@@ -238,21 +442,20 @@ onMounted(() => {
   margin-bottom: 32px;
 }
 
-.section-title { font-size: 20px; font-weight: 700; color: #f8fafc; }
+.section-title { font-size: 20px; font-weight: 700; color: #f8fafc; margin: 0; }
 
-.badge {
+.badge-status {
   background: rgba(34, 211, 238, 0.1);
   color: #22d3ee;
   padding: 4px 12px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
 }
 
 .settings-form { display: flex; flex-direction: column; gap: 28px; }
 
-.input-group label {
+.field-label {
   display: block;
   font-size: 14px;
   color: #94a3b8;
@@ -265,13 +468,18 @@ onMounted(() => {
   background: rgba(15, 23, 42, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  transition: 0.3s;
+  transition: all 0.3s ease;
 }
 
-.input-wrapper:focus-within {
+.input-wrapper.is-focused {
   border-color: #22d3ee;
   background: rgba(15, 23, 42, 0.6);
   box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.1);
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
 }
 
 .input-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #475569; }
@@ -286,43 +494,113 @@ onMounted(() => {
   outline: none;
 }
 
-.input-wrapper.disabled { opacity: 0.5; cursor: not-allowed; }
+.disabled-box { opacity: 0.5; cursor: not-allowed; }
 .helper-text { font-size: 12px; color: #475569; margin-top: 8px; }
 
+.input-grid-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.error-msg {
+  color: #fb7185;
+  font-size: 12px;
+  margin-top: 6px;
+  margin-left: 4px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.input-error {
+  border-color: #fb7185 !important;
+  animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+.error-fade-enter-active, .error-fade-leave-active {
+  transition: all 0.3s ease;
+}
+.error-fade-enter-from, .error-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+/* --- Buttons --- */
 .save-btn {
   width: 100%;
   padding: 16px;
   border-radius: 16px;
   border: none;
-  background: #22d3ee;
-  color: #0f172a;
+  background: #1e293b;
+  color: #475569;
   font-weight: 700;
-  font-size: 16px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: 0.4s;
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.03);
+  color: #64748b;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-ready {
+  background: #22d3ee !important;
+  color: #0f172a !important;
+}
+
+.btn-ready-alt {
+  background: rgba(34, 211, 238, 0.1) !important;
+  color: #22d3ee !important;
+  border: 1px solid rgba(34, 211, 238, 0.3) !important;
 }
 
 .save-btn:hover:not(:disabled) {
-  background: #67e8f9;
-  box-shadow: 0 12px 24px rgba(34, 211, 238, 0.25);
   transform: translateY(-2px);
-}
-
-.save-btn:disabled {
-  background: #1e293b;
-  color: #475569;
-  cursor: not-allowed;
+  box-shadow: 0 10px 20px rgba(34, 211, 238, 0.2);
 }
 
 .mini-loader {
-  width: 22px;
-  height: 22px;
-  border: 3px solid #0f172a;
+  width: 20px;
+  height: 20px;
+  border: 2px solid currentColor;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto;
 }
 
+/* --- Animations --- */
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.page-fade-enter-active {
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.page-fade-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(34, 211, 238, 0.1) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (max-width: 640px) {
+  .input-grid-row, .stats-grid { grid-template-columns: 1fr; }
+  .avatar-section { flex-direction: column; align-items: center; text-align: center; }
+}
 </style>

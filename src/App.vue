@@ -2,7 +2,7 @@
   import { RouterView } from 'vue-router';
   import { onMounted } from 'vue';
   import { useAuthStore } from '@/stores/authStore';
-
+  
   const authStore = useAuthStore();
 
   onMounted(async () => {

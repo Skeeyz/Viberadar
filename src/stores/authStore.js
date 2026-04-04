@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import axios from 'axios';
 import router from '@/router';
 import { useFavoriteStore, useWatchlistStore } from '@/stores/userStore';
+import Swal from 'sweetalert2';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -55,6 +56,7 @@ export const useAuthStore = defineStore('auth', {
         const { user, token } = response.data;
         await this.handleAuthSuccess(user, token);
         router.push('/');
+        localStorage.setItem('auth_method', 'default');
         return true;
       } catch (err) {
         this.error = err.response?.data?.message || 'Login failed';
@@ -88,6 +90,7 @@ export const useAuthStore = defineStore('auth', {
 
         const { user, token } = response.data;
         await this.handleAuthSuccess(user, token);
+        localStorage.setItem('auth_method', 'facebook');
         return true;
       } catch (err) {
         this.error = "Xác thực Facebook thất bại!";
@@ -105,6 +108,7 @@ export const useAuthStore = defineStore('auth', {
         });
         const { user, token } = response.data;
         await this.handleAuthSuccess(user, token);
+        localStorage.setItem('auth_method', 'google');
         return true;
       } catch (err) {
         this.error = "Google Login thất bại!";
@@ -119,6 +123,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = null;
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      localStorage.removeItem('auth_method');
       router.push('/auth/signin');
     },
 
@@ -127,10 +132,25 @@ export const useAuthStore = defineStore('auth', {
       this.token = token;
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('token', token);
+      const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
       const favoriteStore = useFavoriteStore();
       await favoriteStore.fetchFavorites(); 
       const watchlistStore = useWatchlistStore();
       await watchlistStore.fetchWatchlist();
+      Toast.fire({
+            icon: 'success',
+            title: 'Đăng nhập thành công!'
+        });
       router.push('/');
     },
 

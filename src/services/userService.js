@@ -92,4 +92,9 @@ export const userService = {
     const response = await api.post('/user/profile/update', {newUserName : newUserName});
     return response.data;
   },
+
+  async changePassword({password, newPassword}){
+    const response = await api.post('/auth/user/profile/change-password', {password : password, newPassword: newPassword});
+    return response.data;
+  },
 };

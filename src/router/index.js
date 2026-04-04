@@ -71,18 +71,18 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from) => {
   const token = localStorage.getItem('token');
   
   if (to.meta.requiresAuth && !token) {
-    return next('/auth/signin');
+    return '/auth/signin';
   }
 
   if (to.path.startsWith('/auth') && token) {
-    return next('/');
+    return '/';
   }
 
-  return next();
+  return true;
 });
 
 export default router
