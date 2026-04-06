@@ -1,8 +1,9 @@
 <script setup>
 import { ChevronDown } from 'lucide-vue-next';
-import SearchBar from './SearchBar.vue';
+// import SearchBar from './SearchBar.vue';
 import { useAuthStore } from '@/stores/authStore.js';
 import UserControl from './UserControl.vue';
+import MovieSearch  from '@/components/MovieSearch.vue';
 
 const authStore = useAuthStore();
 </script>
@@ -32,7 +33,8 @@ const authStore = useAuthStore();
 
     <div class="header-bottom">
       <div class="search-wrapper">
-        <SearchBar />
+        <!-- <SearchBar /> -->
+        <MovieSearch />
       </div>
     </div>
   </header>

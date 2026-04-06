@@ -3,8 +3,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import SearchResult from '@/components/SearchResult.vue'
 import FilterPanel from '@/components/FilterPanel.vue'
 import MainLayout from '@/layouts/MainLayout.vue'
-import Home from '../views/HomePage.vue'
+// import Home from '../views/HomePage.vue'
 import MovieDetail from '../views/MovieDetail.vue'
+import Home from '../views/Home.vue'
+import MovieList from '../views/MovieList.vue'
 
 const routes = [
   {
@@ -41,7 +43,27 @@ const routes = [
       {
         path: 'search',
         component: SearchResult
-      }],
+      },
+      {
+        path: 'movies',
+        component: MovieList
+      },
+      {
+        path: 'movies/:id',
+        name: 'MovieDetail',
+        component: () => import('@/views/MovieDetail.vue')  
+      },
+      {
+        path: 'search',
+        name: 'SearchResult',
+        component: () => import('../views/SearchResult.vue'),
+      },
+      {
+        path: '/view-all/:section',
+        name: 'ViewAll',
+        component: () => import('../views/ViewAll.vue'),
+      },
+    ],
   },
   {
     path: '/auth',
@@ -63,7 +85,7 @@ const routes = [
         component: () => import('@/views/auth/ForgotPasswordView.vue')
       }
     ]
-  }
+  },
 ]
 
 const router = createRouter({
