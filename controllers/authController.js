@@ -3,6 +3,9 @@ import jwt from 'jsonwebtoken';
 import db from '../config/db.js';
 import axios from 'axios';
 import { OAuth2Client } from 'google-auth-library';
+import crypto from 'crypto';
+import redisClient from '../config/redis.ts';
+import transporter from '../config/mailer.ts';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -104,6 +107,78 @@ export const changePassword = async (req, res) => {
     res.status(201).json({message: 'Thay đổi mật khẩu thành công!'});
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server!' });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Email không tồn tại trên hệ thống!' });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    await redisClient.set(`reset:${resetToken}`, email, {
+      EX: 600 
+    });
+
+
+    const resetUrl = `${process.env.FRONTEND_URL || 'https://localhost:5173'}/auth/reset-password?token=${resetToken}`;
+    
+
+    await transporter.sendMail({
+      to: email,
+      subject: 'VibeRadar - Reset Your Password',
+      html: `
+        <div style="font-family: sans-serif; background: #020617; color: white; padding: 20px;">
+          <h2>Reset Password Request</h2>
+          <p>Click the button below to reset your password. This link expires in 10 minutes.</p>
+          <a href="${resetUrl}" style="background: #22d3ee; color: #020617; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold;">
+            Reset Password
+          </a>
+        </div>
+      `
+    });
+
+    res.status(200).json({ message: 'Link khôi phục đã được gửi vào Email của bạn!' });
+
+  } catch (error) {
+    console.error('Forgot Password Error:', error);
+    res.status(500).json({ message: 'Lỗi server khi gửi mail!' });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: 'Missing data' });
+    }
+
+    const email = await redisClient.getDel(`reset:${token}`);
+
+    if (!email) {
+      return res.status(400).json({ message: 'Token expired or invalid!' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await db.query(
+      'UPDATE users SET password = ? WHERE email = ?',
+      [hashedPassword, email]
+    );
+
+    res.status(200).json({
+      message: 'Password updated successfully! Sign In again, please!'
+    });
+
+  } catch (error) {
+    console.error('Reset Password Error:', error);
+    res.status(500).json({ message: 'Server error!' });
   }
 };
 
