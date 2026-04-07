@@ -27,7 +27,7 @@
       <div class="flex items-center gap-2 p-4 bg-cyan-950/40 rounded-lg border border-cyan-900">
         <i class="fas fa-info-circle text-cyan-400"></i>
         <p class="text-gray-300 text-sm">
-          We will send a secure link or new password to your email to recover your account.
+          We will send a secure link to your email to recover your account.
         </p>
       </div>
 
@@ -42,11 +42,11 @@
 
 <script setup>
 import { ref } from 'vue';
-
+import { useAuthStore } from '@/stores/authStore';
 const email = ref('');
-
-const handleSendEmail = () => {
-  // Logic gọi API yêu cầu reset pass
+const authStore = useAuthStore();
+const handleSendEmail = async() => {
+  const success = await authStore.handleForgotPassword(email.value);
   console.log(`Gửi yêu cầu reset pass cho: ${email.value}`);
 };
 </script>

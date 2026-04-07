@@ -1,6 +1,6 @@
-const express = require('express');
-const router = express.Router();
-const authMiddleware = require('../middleware/auth'); // Middleware kiểm tra Token
+// const express = require('express');
+// const router = express.Router();
+// const authMiddleware = require('../middleware/auth'); // Middleware kiểm tra Token
 
 // GET: Lấy danh sách phim yêu thích
 // router.get('/favorites', authMiddleware, async (req, res) => {
@@ -32,4 +32,4 @@ const authMiddleware = require('../middleware/auth'); // Middleware kiểm tra T
 //   }
 // });
 
-module.exports = router;
+// module.exports = router;

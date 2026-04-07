@@ -154,5 +154,28 @@ export const useAuthStore = defineStore('auth', {
       router.push('/');
     },
 
+    async handleForgotPassword(emailReset){
+      try {
+        const response = await axios.post('http://localhost:3000/api/auth/forgot-password', {
+          email: emailReset
+        });
+        console.log(`Gửi yêu cầu reset pass cho: ${emailReset} Thành công!`);
+      } catch (err) {
+        console.log(`Gửi yêu cầu reset pass cho: ${emailReset} Thất bại!`);
+      }
+    },
+
+    async handleResetPassword(tokenReset, newPasswordReset){
+      try {
+        const res = await axios.post('http://localhost:3000/api/auth/reset-password', {
+          token: tokenReset, // Lấy từ URL
+          newPassword: newPasswordReset
+        });
+        // Thông báo thành công và chuyển về trang Login
+      } catch (err) {
+        // Hiện lỗi từ server (Token hết hạn chẳng hạn)
+      }
+    },
+
   }
 });
