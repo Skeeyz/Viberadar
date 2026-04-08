@@ -14,7 +14,11 @@ const routes = [
     component: MainLayout,
     children: [
       {
-        path: '',
+        path: '/',
+        redirect: '/home'
+      },
+      {
+        path: '/home',
         component: Home
       },
       {
@@ -90,6 +94,12 @@ const routes = [
         component: () => import('@/views/auth/ResetPasswordView.vue')
       }
     ]
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/views/errors/NotFoundView.vue'),
+    meta: { title: '404 - Page Not Found' }
   },
 ]
 

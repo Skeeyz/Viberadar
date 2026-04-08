@@ -17,7 +17,7 @@ export const useMovieStore = defineStore('movie', {
     movies: [],
 
     // Thêm các section cho Home
-    featured:        null,
+    // featured:        null,
     newMovies:       [],
     upcomingMovie:       [],
     recommended:     [],   // movies
@@ -26,6 +26,7 @@ export const useMovieStore = defineStore('movie', {
 
     // Chi tiết phim
     currentMovie:    null,
+    activeMovieId: null,
 
     filteredMovies: [],
     filterLoading: false,
@@ -59,26 +60,25 @@ export const useMovieStore = defineStore('movie', {
           fetchTVList('popular', 1),    
         ])
 
-      this.newMovies            = nowPlaying.movies.slice(0, 8)
+      this.newMovies            = nowPlaying.movies.slice(0, 10)
       this.newMoviesTotalPages  = nowPlaying.totalPages
 
-      this.upcomingMovie        = upcoming.movies.slice(0, 8)
+      this.upcomingMovie        = upcoming.movies.slice(0, 10)
       this.upcomingTotalPages   = upcoming.totalPages
 
-      this.recommended          = popular.movies.slice(0, 8)
+      this.recommended          = popular.movies.slice(0, 10)
       this.recommendedTotalPages= popular.totalPages
 
-      this.recommendedTV            = popularTV.movies.slice(0, 8)   // ✅ no more Array.isArray guard
+      this.recommendedTV            = popularTV.movies.slice(0, 10)   // ✅ no more Array.isArray guard
       this.recommendedTVTotalPages  = popularTV.totalPages
       this.recommendedTVTotalPages = 500 // TMDB thường có ~500 pages
 
       this.recentlyUpdated = popular.movies.slice(0, 15).map(m => ({
         ...m, episode: 'Movie', date: m.year,
       }))
-
-      if (nowPlaying.movies[0]) {
-        this.featured = await fetchMovieDetail(nowPlaying.movies[0].id)
-      }
+      // if (nowPlaying.movies[0]) {
+      //   this.featured = await fetchMovieDetail(nowPlaying.movies[0].id)
+      // }
     } catch (err) {
       this.error = err.message
     } finally {
@@ -111,13 +111,18 @@ export const useMovieStore = defineStore('movie', {
     }
 },
 
-    // Fetch chi tiết 1 phim (dùng cho trang MovieDetail)
     async fetchMovieDetail(id) {
       this.loading = true
       this.error   = null
       try {
-        this.currentMovie = await fetchMovieDetail(id, true)
+        this.currentMovie = await fetchMovieDetail(id, true);
       } catch (err) {
+        if (!this.currentMovie) {
+          router.push({ 
+            name: 'NotFound',
+            query: { error: 'movie-not-found' } 
+          });
+        }
         this.error = err.message
       } finally {
         this.loading = false
@@ -136,18 +141,22 @@ export const useMovieStore = defineStore('movie', {
       this.filterLoading = false
     },
     async openTrailer(movie_id) {
-      if (!this.featured) return
-      if (!this.trailerKey || this.movie_id !== this.featured.id) {
+      if (!this.trailerKey || movie_id !== this.activeMovieId ) {
         try {
           const videos = await fetchMovieVideos(movie_id)
-          const best = videos.find(v => v.type === 'Trailer' && v.official)
-                    ?? videos.find(v => v.type === 'Trailer')
-                    ?? videos[0]
-          this.trailerKey = best?.key ?? null
-          this.featured.id = movie_id;
+          if (!videos || videos.length === 0) {
+          this.trailerKey = null;
+          } else {
+            const best = videos.find(v => v.type === 'Trailer' && v.official)
+                          ?? videos.find(v => v.type === 'Trailer')
+                          ?? videos[0];
+            
+            this.trailerKey = best?.key ?? null;
+          }
+          this.activeMovieId = movie_id;
         } catch (error) {
-          console.error('Failed to fetch trailer:', error)
-          this.trailerKey = null
+          console.error('Failed to fetch trailer:', error);
+          this.trailerKey = null;
         }
       }
       this.showTrailer = true;

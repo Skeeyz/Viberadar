@@ -26,9 +26,6 @@ export const userService = {
   async getFavorites() {
     try {
       const response = await api.get('/favorites');
-      
-      // console.log("--- DỮ LIỆU SẠCH TỪ BACKEND ---");
-      // console.table(response.data.movies); 
 
       const movies = response.data.movies.map(item => ({
         id: item.id,
@@ -50,7 +47,6 @@ export const userService = {
   },
 
   async toggleFavorite({ tmdbId, mediaType }) {
-    // Chỉ gửi duy nhất ID phim lên để Backend xử lý
     const response = await api.post('/user/favorites/toggle', { tmdb_id: tmdbId , media_type: mediaType});
     return response.data;
   },
@@ -60,9 +56,6 @@ export const userService = {
   async getWatchlist() {
     try {
       const response = await api.get('/watchlist');
-      
-      // console.log("--- DỮ LIỆU SẠCH TỪ BACKEND ---");
-      // console.table(response.data.movies); 
 
       const movies = response.data.movies.map(item => ({
         id: item.id,
@@ -90,12 +83,12 @@ export const userService = {
 
   async updateProfileName(newUserName){
     const response = await api.post('/user/profile/update', {newUserName : newUserName});
-    return response.data;
+    return response;
   },
 
   async changePassword({password, newPassword}){
     const response = await api.post('/auth/user/profile/change-password', {password : password, newPassword: newPassword});
-    return response.data;
+    return response;
   },
 
 };

@@ -27,6 +27,12 @@
       <div v-if="isFilterOpen" class="drawer-backdrop" @click="closeFilter"></div>
     </transition>
 
+    <MovieTrailer
+        :show="showTrailer"
+        :trailer-key="trailerKey"
+        @close="showTrailer = false"
+    />
+
     <div v-if="store.loading" class="state-msg">
       <div class="mini-loader"></div>
       <p>Loading VibeRadar...</p>
@@ -155,7 +161,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
 import { useRouter } from "vue-router";
 // Thêm icon mới
 import { Filter, X, ChevronLeft, ChevronRight } from 'lucide-vue-next';
-
+import MovieCardSkeleton from "@/components/MovieCardSkeleton.vue"
 import MovieCard from "../components/MovieCard.vue";
 import Header from "../components/Header.vue";
 import MovieTrailer from "../components/MovieTrailer.vue";
@@ -171,10 +177,18 @@ const router = useRouter();
 // ===== State =====
 const showLeft = ref(false);
 const showRight = ref(true);
-const isFilterOpen = ref(false); // Trạng thái đóng mở Filter
+const isFilterOpen = ref(false);
 
 const activeTab = ref<"Movies" | "TV Show">("Movies");
 const tabs = ["Movies", "TV Show"];
+const showTrailer = computed({
+  get:()=> store.showTrailer,
+  set:(value:boolean) =>{
+    store.showTrailer = value;
+  },
+});
+
+const trailerKey = computed(() => store.trailerKey);
 
 // ===== Ref =====
 const listRef = ref<HTMLElement | null>(null);
@@ -327,6 +341,12 @@ const onFilterReset = () => {
   flex-direction: column;
   overflow: hidden;
   box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5);
+}
+
+.skeleton-grid {
+  display: grid;
+  gap: 28px 22px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
 .drawer-header {

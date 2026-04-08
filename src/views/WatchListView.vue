@@ -177,6 +177,10 @@ const paginatedMovies = computed(() => {
 });
 
 onMounted(async () => {
+   window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
   await watchlistStore.fetchWatchlist();
 });
 </script>

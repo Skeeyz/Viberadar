@@ -171,6 +171,10 @@ const paginatedMovies = computed(() => {
 watch([searchQuery, selectedGenres, sortBy], () => { currentPage.value = 1; });
 
 const loadFavorites = async () => {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
   // await sleep(5000);
   await favoriteStore.fetchFavorites();
 };

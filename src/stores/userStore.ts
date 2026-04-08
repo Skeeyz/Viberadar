@@ -24,11 +24,11 @@ export const useFavoriteStore = defineStore('favorite', () => {
   const toggleFavorite = async (movie: any) => {
     if (!authStore.isAuthenticated) {
       const result = await Swal.fire({
-        title: 'Yêu cầu đăng nhập',
-        text: 'Bạn cần đăng nhập để sử dụng tính năng này!',
+        title: 'Sign In required',
+        text: 'You need to sign in to use this feature!',
         icon: 'info',
         showCancelButton: true,
-        confirmButtonText: 'Đăng nhập',
+        confirmButtonText: 'Sign In',
         confirmButtonColor: '#22d3ee'
       });
       
@@ -43,14 +43,14 @@ export const useFavoriteStore = defineStore('favorite', () => {
     const isRemoving = index > -1;
     if (isRemoving){
         const confirmResult = await Swal.fire({
-            title: 'Xóa khỏi danh sách?',
-            text: `Bạn có chắc muốn bỏ "${movie.title || movie.name}" khỏi mục yêu thích?`,
+            title: 'Remove from favorites?',
+            text: `Are you sure you want to remove "${movie.title || movie.name}" from your favorites?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
             cancelButtonColor: '#64748b',
-            confirmButtonText: 'Xóa bỏ',
-            cancelButtonText: 'Giữ lại',
+            confirmButtonText: 'Remove',
+            cancelButtonText: 'Keep',
             reverseButtons: true 
         });
         if(confirmResult.isConfirmed)
@@ -76,11 +76,11 @@ export const useFavoriteStore = defineStore('favorite', () => {
 
         Toast.fire({
             icon: 'success',
-            title: isRemoving ? 'Đã xóa khỏi danh sách' : 'Đã thêm vào yêu thích'
+            title: isRemoving ? 'Removed from your favorites!' : 'Added to your favorites!'
         });
     } catch (error) {
         favorites.value = oldFavorites;
-        Swal.fire('Lỗi', 'Không thể cập nhật danh sách', 'error');
+        Swal.fire('Error', 'We couldn\'t complete this action. Please try again!', 'error');
     }
   }
 
@@ -110,11 +110,11 @@ export const useWatchlistStore = defineStore('watchlist', () => {
   const toggleWatchlist = async (movie: any) => {
     if (!authStore.isAuthenticated) {
       const result = await Swal.fire({
-        title: 'Yêu cầu đăng nhập',
-        text: 'Bạn cần đăng nhập để sử dụng tính năng này!',
+        title: 'Sign In required',
+        text: 'You need to sign in to use this feature!',
         icon: 'info',
         showCancelButton: true,
-        confirmButtonText: 'Đăng nhập',
+        confirmButtonText: 'Sign In',
         confirmButtonColor: '#22d3ee'
       });
       
@@ -129,14 +129,14 @@ export const useWatchlistStore = defineStore('watchlist', () => {
     const isRemoving = index > -1;
     if (isRemoving){
         const confirmResult = await Swal.fire({
-            title: 'Xóa khỏi danh sách?',
-            text: `Bạn có chắc muốn bỏ "${movie.title || movie.name}" khỏi mục danh sách theo dõi?`,
+            title: 'Remove from watchlist?',
+            text: `Are you sure you want to remove "${movie.title || movie.name}" from your watchlist?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
             cancelButtonColor: '#64748b',
-            confirmButtonText: 'Xóa bỏ',
-            cancelButtonText: 'Giữ lại',
+            confirmButtonText: 'Remove',
+            cancelButtonText: 'Keep',
             reverseButtons: true 
         });
         if(confirmResult.isConfirmed)
@@ -162,11 +162,11 @@ export const useWatchlistStore = defineStore('watchlist', () => {
 
         Toast.fire({
             icon: 'success',
-            title: isRemoving ? 'Đã xóa khỏi danh sách theo dõi' : 'Đã thêm vào danh sách theo dõi'
+            title: isRemoving ? 'Removed from your watchlist!' : 'Added to your watchlist!'
         });
     } catch (error) {
         watchlist.value = oldFavorites;
-        Swal.fire('Lỗi', 'Không thể cập nhật danh sách', 'error');
+        Swal.fire('Lỗi', 'We couldn\'t complete this action. Please try again!', 'error');
     }
   }
 
@@ -181,11 +181,11 @@ export const useProfileStore = defineStore('profile', () => {
   const updateProfileName = async (newName: string) =>{
     if (!authStore.isAuthenticated) {
       const result = await Swal.fire({
-        title: 'Yêu cầu đăng nhập',
-        text: 'Bạn cần đăng nhập để sử dụng tính năng này!',
+        title: 'Sign In required',
+        text: 'You need to sign in to use this feature!',
         icon: 'info',
         showCancelButton: true,
-        confirmButtonText: 'Đăng nhập',
+        confirmButtonText: 'Sign In',
         confirmButtonColor: '#22d3ee'
       });
       
@@ -195,39 +195,30 @@ export const useProfileStore = defineStore('profile', () => {
       return;
     }
     const confirmResult = await Swal.fire({
-            title: 'Cập nhật tên người dùng?',
-            text: `Bạn có chắc muốn đổi tên thành "${newName}" không?`,
+            title: 'Update username?',
+            text: `Are you sure you want to change your username to "${newName}"?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
             cancelButtonColor: '#64748b',
-            confirmButtonText: 'Đổi luôn',
-            cancelButtonText: 'Giữ lại',
+            confirmButtonText: 'Change',
+            cancelButtonText: 'Keep',
             reverseButtons: true 
         });
     if(confirmResult.isConfirmed){
       try{
         loading.value=true;
-        const result = await userService.updateProfileName(newName);
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
-        });
-
-        Toast.fire({
-            icon: 'success',
-            title: 'Tên người dùng đã được cập nhật'
-        });
+        const response = await userService.updateProfileName(newName);
+        return { 
+          success: true, 
+          message: response.data?.message || 'Username updated successfully' 
+        };
       }
       catch(error){
-        Swal.fire('Lỗi', 'Không thể cập nhật tên người dùng', 'error');
+        return { 
+          success: false, 
+          message: error.response?.data?.message || 'Update failed. Please try again.' 
+        };
       }
       finally{
         loading.value=false;
@@ -240,11 +231,11 @@ export const useProfileStore = defineStore('profile', () => {
   const changePassword = async (currentPassword: string, confirmPassword: string) =>{
     if (!authStore.isAuthenticated) {
       const result = await Swal.fire({
-        title: 'Yêu cầu đăng nhập',
-        text: 'Bạn cần đăng nhập để sử dụng tính năng này!',
+        title: 'Sign In required',
+        text: 'You need to sign in to use this feature!',
         icon: 'info',
         showCancelButton: true,
-        confirmButtonText: 'Đăng nhập',
+        confirmButtonText: 'Sign In',
         confirmButtonColor: '#22d3ee'
       });
       
@@ -254,42 +245,33 @@ export const useProfileStore = defineStore('profile', () => {
       return;
     }
     const confirmResult = await Swal.fire({
-            title: 'Thay đổi mật khẩu?',
-            text: `Bạn có chắc muốn đổi mật khẩu mới không?`,
+            title: 'Change password?',
+            text: `Are you sure you want to change your password?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
             cancelButtonColor: '#64748b',
-            confirmButtonText: 'Đổi luôn',
-            cancelButtonText: 'Giữ lại',
+            confirmButtonText: 'Change',
+            cancelButtonText: 'Keep',
             reverseButtons: true 
         });
     if(confirmResult.isConfirmed){
       try{
         loading.value=true;
-        const result = await userService.changePassword({password: currentPassword, newPassword: confirmPassword});
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
-        });
-
-        Toast.fire({
-            icon: 'success',
-            title: 'Mật khẩu đã được thay đổi'
-        });
-      }
-      catch(error){
-        Swal.fire('Lỗi', 'Mật khẩu hiện tại không chính xác', 'error');
-      }
-      finally{
-        loading.value=false;
+        const response = await userService.changePassword({password: currentPassword, newPassword: confirmPassword});
+        return { 
+          success: true, 
+          message: response.data?.message || 'Password updated successfully!' 
+        };
+      } catch (error) {
+        return { 
+          success: false, 
+          message: error.response?.data?.message || 'Failed to update password.',
+          status: error.response?.status 
+        };
+        
+      } finally {
+        loading.value = false;
       }
     }
     else

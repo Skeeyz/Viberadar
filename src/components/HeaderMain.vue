@@ -11,12 +11,15 @@ const authStore = useAuthStore();
   <header class="header">
     <div class="header-top">
       <!-- Logo -->
-      <RouterLink to="/" class="logo" aria-label="Viberadar Home">
+      <RouterLink to="/home" class="logo" aria-label="Viberadar Home">
         <span class="highlight">VIBE</span>RADAR
       </RouterLink>
 
       <!-- Menu -->
-
+      <div class="search-wrapper">
+        <!-- <SearchBar /> -->
+        <MovieSearch />
+      </div>
 
       <!-- Actions -->
       <div class="actions">
@@ -32,10 +35,7 @@ const authStore = useAuthStore();
     </div>
 
     <div class="header-bottom">
-      <div class="search-wrapper">
-        <!-- <SearchBar /> -->
-        <MovieSearch />
-      </div>
+  
     </div>
   </header>
 </template>
@@ -49,49 +49,38 @@ const authStore = useAuthStore();
   z-index: 100;
 }
 
-/* TOP */
 .header-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-between; 
   gap: 20px;
   padding: 14px 32px;
-  flex-wrap: wrap;
+  position: relative;
 }
 
 /* Logo */
 .logo {
+  flex: 1; 
   font-weight: bold;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
   white-space: nowrap;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.search-wrapper {
+  flex: 2;
+  max-width: 600px;
+  display: flex;
+  justify-content: center;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .highlight {
   color: orange;
-}
-
-.nav {
-  display: flex;
-  gap: 25px;
-  font-size: 14px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-/* Nav item */
-.nav-item {
-  position: relative;
-  cursor: pointer;
-}
-
-.nav-item span {
-  color: #ddd;
-}
-
-.nav-item:hover span {
-  color: white;
 }
 
 /* Dropdown */
@@ -124,20 +113,14 @@ const authStore = useAuthStore();
   color: white;
 }
 
-/* Show dropdown */
-.nav-item:hover .dropdown {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
 
 /* Actions */
 .actions {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-end; /* Đẩy nội dung về cuối */
 }
 
 .login {
@@ -167,12 +150,6 @@ const authStore = useAuthStore();
   width: 100%;
 }
 
-.nav-link {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #ddd;
-}
 
 .icon {
   width: 16px;
@@ -181,10 +158,6 @@ const authStore = useAuthStore();
   transition: 0.3s;
 }
 
-/* xoay icon khi hover */
-.nav-item:hover .icon {
-  transform: rotate(180deg);
-}
 
 @media (max-width: 1100px) {
   .header-top {
@@ -195,29 +168,27 @@ const authStore = useAuthStore();
     padding: 0 24px 18px;
   }
 
-  .nav {
-    gap: 16px;
-    font-size: 13px;
-  }
 }
 
 @media (max-width: 820px) {
   .header-top {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+    gap: 15px;
   }
 
-  .logo {
+  .logo, .search-wrapper, .actions {
+    flex: none;
+    width: 100%;
+    justify-content: center;
     text-align: center;
   }
 
-  .nav {
-    justify-content: center;
-  }
 
-  .actions {
-    justify-content: center;
+  .search-wrapper {
+    order: 3;
   }
+  
 }
 
 @media (max-width: 640px) {
@@ -229,29 +200,10 @@ const authStore = useAuthStore();
     padding: 0 16px 16px;
   }
 
-  .nav {
-    gap: 12px;
-    font-size: 12px;
-  }
-
-  .nav-item,
-  .nav > a {
-    width: 100%;
-    text-align: center;
-  }
-
-  .nav-link {
-    justify-content: center;
-  }
-
   .dropdown {
     left: 50%;
     transform: translate(-50%, 10px);
     min-width: 180px;
-  }
-
-  .nav-item:hover .dropdown {
-    transform: translate(-50%, 0);
   }
 
   .actions {

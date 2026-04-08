@@ -2,69 +2,38 @@ import axios from "axios"
 
 const API_KEY = import.meta.env.VITE_TMDB_KEY
 const IMAGE_BASE_URL1 = "https://image.tmdb.org/t/p/w500"
+const BASE_URL = 'https://api.themoviedb.org/3'
+const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
 
 const GENRE_MAP = {
-  28: "Action",
-  12: "Adventure",
-  16: "Animation",
-  35: "Comedy",
-  80: "Crime",
-  99: "Documentary",
-  18: "Drama",
-  10751: "Family",
-  14: "Fantasy",
-  36: "History",
-  27: "Horror",
-  10402: "Music",
-  9648: "Mystery",
-  10749: "Romance",
-  878: "Sci-Fi",
-  53: "Thriller",
-  10752: "War",
-  37: "Western"
+  28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
+  99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
+  27: "Horror", 10402: "Music", 9648: "Mystery", 10749: "Romance", 878: "Sci-Fi",
+  53: "Thriller", 10752: "War", 37: "Western"
 }
 
 const API = axios.create({
   baseURL: "https://api.themoviedb.org/3"
 })
 
-const mapMovie = (movie) => ({
-  id: movie.id,
-  title: movie.title,
-  poster: movie.poster_path
-    ? `${IMAGE_BASE_URL1}${movie.poster_path}`
-    : "https://via.placeholder.com/500x750?text=No+Image",
-  year: movie.release_date ? Number(movie.release_date.slice(0, 4)) : 0,
-  rating: movie.vote_average ?? 0,
-  description: movie.overview || "No description available.",
-  genres: (movie.genre_ids || []).map((id) => GENRE_MAP[id]).filter(Boolean)
-})
+// Next null/undefined
+const mapMovie = (movie) => {
+  if (!movie) return null; 
+  return {
+    id: movie.id,
+    title: movie.title || movie.name,
+    poster: movie.poster_path
+      ? `${IMAGE_BASE_URL1}${movie.poster_path}`
+      : "https://via.placeholder.com/500x750?text=No+Image",
+    year: movie.release_date || movie.first_air_date ? Number((movie.release_date || movie.first_air_date).slice(0, 4)) : 0,
+    rating: movie.vote_average ?? 0,
+    description: movie.overview || "No description available.",
+    genres: (movie.genre_ids || []).map((id) => GENRE_MAP[id]).filter(Boolean)
+  }
+}
 
-// export const getPopularMovies = async () => {
-//   const res = await API.get("/movie/popular", {
-//     params: {
-//       api_key: API_KEY
-//     }
-//   })
-  
-//   return res.data.results.map(mapMovie)
-// }
-// export const searchMovies = async (query) => {
-//   const res = await API.get("/search/movie", {
-//     params: {
-//       api_key: API_KEY,
-//       query
-//     }
-//   })
-
-//   return res.data.results.map(mapMovie)
-// }
-const BASE_URL = 'https://api.themoviedb.org/3'
-const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
-
-// ── Image size helpers ──────────────────────────────────────────
 export const tmdbImage = {
-  poster:   (path, size = 'w300')      => path ? `${IMAGE_BASE_URL}/${size}${path}` : null,
+  poster:   (path, size = 'w300')    => path ? `${IMAGE_BASE_URL}/${size}${path}` : null,
   backdrop: (path, size = 'original')  => path ? `${IMAGE_BASE_URL}/${size}${path}` : null,
   avatar:   (path, size = 'w185')      => {
     if (!path) return null
@@ -73,93 +42,108 @@ export const tmdbImage = {
   },
 }
 
-// ── Base fetch ─────────────────────────────────────────────────
+// ── Base fetch ─────────────────
 async function tmdbFetch(endpoint, params = {}) {
-  if (params.page) params.page = Math.min(Number(params.page), 500)
-  const url = new URL(`${BASE_URL}${endpoint}`)
-  url.searchParams.set('api_key', API_KEY)
-  url.searchParams.set('language', 'en-US')
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
+  try {
+    if (params.page) params.page = Math.min(Number(params.page), 500)
+    const url = new URL(`${BASE_URL}${endpoint}`)
+    url.searchParams.set('api_key', API_KEY)
+    url.searchParams.set('language', 'en-US')
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
 
-  const res = await fetch(url.toString())
-  if (!res.ok) throw new Error(`TMDB error ${res.status}: ${res.statusText}`)
-  return res.json()
+    const res = await fetch(url.toString())
+    if (!res.ok) {
+        console.warn(`TMDB Error ${res.status}: Skip item at ${endpoint}`);
+        return null; // No throw error
+    }
+    return res.json()
+  } catch (err) {
+    return null;
+  }
 }
 
 // ── Movie APIs ─────────────────────────────────────────────────
 
-// Giữ nguyên hàm gốc (dùng axios - giữ để không phá code cũ)
 export const getPopularMovies = () => {
   return axios.get(`${BASE_URL}/movie/popular?api_key=${API_KEY}`)
 }
 
-// Lấy danh sách phim theo type: 'popular' | 'now_playing' | 'upcoming' | 'top_rated'
 export async function fetchMovieList(type = 'popular', page = 1) {
   const data = await tmdbFetch(`/movie/${type}`, { page })
+  if (!data) return { movies: [], totalPages: 0 }
   return {
-    movies:     data.results.map(mapMovie),
-    totalPages: data.total_pages,           // ✅ consistent shape
+    movies: data.results.map(mapMovie).filter(Boolean), // Filter 404
+    totalPages: data.total_pages,
   }
 }
 
-// Lấy danh sách phim theo type, trả về cả total_pages để phân trang
 export async function fetchMovieListPaged(type = 'popular', page = 1) {
   const data = await tmdbFetch(`/movie/${type}`, { page })
+  if (!data) return { movies: [], totalPages: 0, totalResults: 0, currentPage: 1 }
   return {
-    movies:      data.results.map(mapMovie),
+    movies:      data.results.map(mapMovie).filter(Boolean),
     totalPages:   Math.min(data.total_pages, 500),
     totalResults: data.total_results,
     currentPage: data.page,
   }
 }
 
-// Lấy chi tiết 1 phim kèm credits + videos, tuỳ chọn reviews
 export async function fetchMovieDetail(movieId, includeReviews = false) {
-  const promises = [
-    tmdbFetch(`/movie/${movieId}`),
-    tmdbFetch(`/movie/${movieId}/credits`),
-    tmdbFetch(`/movie/${movieId}/videos`),
-  ]
-  if (includeReviews) {
-    promises.push(tmdbFetch(`/movie/${movieId}/reviews`))
+  try {
+      const promises = [
+        tmdbFetch(`/movie/${movieId}`),
+        tmdbFetch(`/movie/${movieId}/credits`),
+        tmdbFetch(`/movie/${movieId}/videos`),
+      ]
+      if (includeReviews) {
+        promises.push(tmdbFetch(`/movie/${movieId}/reviews`))
+      }
+
+      const results = await Promise.all(promises)
+      const detail = results[0]
+      const credits = results[1] || { crew: [], cast: [] }
+      const videosData = results[2] || { results: [] }
+      const reviewsData = results[3]
+
+      if (!detail) return null; // Moive null
+
+      const movie = normalizeMovieDetail(detail, credits)
+      movie.trailer = getBestTrailer(videosData.results)
+
+      if (includeReviews && reviewsData) {
+        movie.reviews      = reviewsData.results.map(normalizeReview).filter(Boolean)
+        movie.reviewsTotal = reviewsData.total_results
+      }
+
+      return movie
+  } catch (err) {
+      return null;
   }
-
-  const [detail, credits, videosData, reviewsData] = await Promise.all(promises)
-  const movie = normalizeMovieDetail(detail, credits)
-
-  movie.trailer = getBestTrailer(videosData.results)
-
-  if (includeReviews && reviewsData) {
-    movie.reviews      = reviewsData.results.map(normalizeReview)
-    movie.reviewsTotal = reviewsData.total_results
-  }
-
-  return movie
 }
 
-// Lấy tất cả video của phim (trailer, teaser, clip...)
 export async function fetchMovieVideos(movieId) {
   const data = await tmdbFetch(`/movie/${movieId}/videos`)
-  return data.results.map(normalizeVideo)
+  if (!data) return []
+  return data.results.map(normalizeVideo).filter(Boolean)
 }
 
-// Lấy danh sách phim tương tự
 export async function fetchSimilarMovies(movieId, page = 1) {
   const data = await tmdbFetch(`/movie/${movieId}/similar`, { page })
-  return data.results.map(mapMovie)
+  if (!data) return []
+  return data.results.map(mapMovie).filter(Boolean)
 }
 
-// Lấy phim được đề xuất dựa theo movieId
 export async function fetchRecommendedMovies(movieId, page = 1) {
   const data = await tmdbFetch(`/movie/${movieId}/recommendations`, { page })
-  return data.results.map(mapMovie)
+  if (!data) return []
+  return data.results.map(mapMovie).filter(Boolean)
 }
 
-// Tìm kiếm phim theo từ khoá
 export async function searchMovies(query, page = 1) {
   const data = await tmdbFetch('/search/movie', { query, page })
+  if (!data) return { results: [], total_pages: 0, total_results: 0 }
   return {
-    results:     data.results.map(mapMovie),
+    results:     data.results.map(mapMovie).filter(Boolean),
     total_pages: data.total_pages,
     total_results: data.total_results,
   }
@@ -169,35 +153,35 @@ export async function fetchAllMovies(page = 1) {
   return fetchMovieListPaged('popular', page)
 }
 
-// Lấy reviews của phim (phân trang)
 export async function fetchMovieReviews(movieId, page = 1) {
   const data = await tmdbFetch(`/movie/${movieId}/reviews`, { page })
+  if (!data) return { reviews: [], totalPages: 0, totalResults: 0 }
   return {
-    reviews:      data.results.map(normalizeReview),
+    reviews:      data.results.map(normalizeReview).filter(Boolean),
     totalPages:   data.total_pages,
     totalResults: data.total_results,
   }
 }
 
-// Lấy danh sách thể loại phim
 export async function fetchGenres() {
   const data = await tmdbFetch('/genre/movie/list')
-  return data.genres  // [{ id, name }]
+  return data ? data.genres : []
 }
 
-// Lấy phim theo thể loại
 export async function fetchMoviesByGenre(genreId, page = 1) {
   const data = await tmdbFetch('/discover/movie', {
     with_genres: genreId,
     sort_by: 'popularity.desc',
     page,
   })
-  return data.results.map(mapMovie)
+  if (!data) return []
+  return data.results.map(mapMovie).filter(Boolean)
 }
 
 // ── Normalizers ────────────────────────────────────────────────
 
 function normalizeMovie(movie) {
+  if (!movie) return null
   return {
     id:       movie.id,
     title:    movie.title,
@@ -249,6 +233,7 @@ function normalizeMovieDetail(movie, credits) {
 }
 
 function normalizeVideo(video) {
+  if (!video) return null
   return {
     id:        video.id,
     name:      video.name,
@@ -263,16 +248,17 @@ function normalizeVideo(video) {
 }
 
 function normalizeReview(review) {
+  if (!review) return null
   return {
     id:             review.id,
-    author:         review.author,
+    author:          review.author,
     authorAvatar:   tmdbImage.avatar(review.author_details?.avatar_path),
     authorUsername: review.author_details?.username,
-    rating:         review.author_details?.rating
+    rating:          review.author_details?.rating
                       ? (review.author_details.rating * 10).toFixed(0)
                       : null,
-    content:        review.content,
-    date:           review.created_at
+    content:         review.content,
+    date:            review.created_at
                       ? new Date(review.created_at).toLocaleDateString('en-US', {
                           year: 'numeric', month: 'long', day: 'numeric',
                         })
@@ -315,17 +301,17 @@ function formatDate(dateStr) {
   })
 }
 
-// Tìm kiếm TV Show
 export async function searchTVShows(query, page = 1) {
   const data = await tmdbFetch('/search/tv', { query, page })
+  if (!data) return { results: [], total_pages: 0 }
   return {
-    results:     data.results.map(normalizeTVShow),
+    results:     data.results.map(normalizeTVShow).filter(Boolean),
     total_pages: data.total_pages,
   }
 }
 
-// Normalize TV Show (khác Movie ở chỗ dùng name thay vì title)
 function normalizeTVShow(item) {
+  if (!item) return null
   return {
     id:       item.id,
     title:    item.name,
@@ -339,10 +325,12 @@ function normalizeTVShow(item) {
     type:     'tv',
   }
 }
+
 export async function fetchTVShowDetail(id) {
   const data = await tmdbFetch(`/tv/${id}`, {
     append_to_response: 'credits,videos',
   })
+  if (!data) return null;
 
   return {
     id:           data.id,
@@ -381,34 +369,35 @@ export async function fetchFilteredMovies(params) {
   if (params.sort_by)               query.set('sort_by', params.sort_by)
   if (params['vote_average.gte'])   query.set('vote_average.gte', params['vote_average.gte'])
 
-  const res = await fetch(`${BASE_URL}/discover/${type}?${query}`)
-  const data = await res.json()
+  try {
+      const res = await fetch(`${BASE_URL}/discover/${type}?${query}`)
+      if (!res.ok) return [];
+      const data = await res.json()
 
-  return (data.results || []).map(m => ({
-    id:       m.id,
-    title:    m.title || m.name,
-    poster:   m.poster_path ? `https://image.tmdb.org/t/p/w300${m.poster_path}` : null,
-    backdrop: m.backdrop_path ? `https://image.tmdb.org/t/p/w780${m.backdrop_path}` : null,
-    year:     (m.release_date || m.first_air_date || '').slice(0, 4),
-    score:    m.vote_average?.toFixed(1),
-    votes:    m.vote_count,
-    genres:   m.genre_ids ?? [],
-    type,
-  }))
+      return (data.results || []).map(m => {
+          const mapped = mapMovie(m);
+          if (mapped) mapped.type = type;
+          return mapped;
+      }).filter(Boolean);
+  } catch (err) {
+      return [];
+  }
 }
 
 export async function fetchTVList(type = 'popular', page = 1) {
   const data = await tmdbFetch(`/tv/${type}`, { page })
+  if (!data) return { movies: [], totalPages: 0 }
   return {
-    movies:     data.results.map(normalizeTVShow),  // ✅
+    movies:     data.results.map(normalizeTVShow).filter(Boolean),
     totalPages: data.total_pages,
   }
 }
-// Thêm vào movieService.js
+
 export async function fetchTVListPaged(type = 'popular', page = 1) {
   const data = await tmdbFetch(`/tv/${type}`, { page })
+  if (!data) return { movies: [], totalPages: 0, totalResults: 0, currentPage: 1 }
   return {
-    movies:      data.results.map(normalizeTVShow),
+    movies:      data.results.map(normalizeTVShow).filter(Boolean),
     totalPages:   Math.min(data.total_pages, 500),
     totalResults: data.total_results,
     currentPage: data.page,

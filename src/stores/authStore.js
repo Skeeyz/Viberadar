@@ -149,33 +149,63 @@ export const useAuthStore = defineStore('auth', {
       await watchlistStore.fetchWatchlist();
       Toast.fire({
             icon: 'success',
-            title: 'Đăng nhập thành công!'
+            title: 'Login successful!'
         });
       router.push('/');
     },
 
-    async handleForgotPassword(emailReset){
+    async handleForgotPassword(emailReset) {
       try {
         const response = await axios.post('http://localhost:3000/api/auth/forgot-password', {
           email: emailReset
         });
-        console.log(`Gửi yêu cầu reset pass cho: ${emailReset} Thành công!`);
+        return { 
+          success: true, 
+          message: response.data?.message || 'A reset link has been sent to your email.' 
+        };
+
       } catch (err) {
-        console.log(`Gửi yêu cầu reset pass cho: ${emailReset} Thất bại!`);
+        const errorMessage = err.response?.data?.message || 'Failed to send request. Please try again later.';
+        
+        return { 
+          success: false, 
+          message: errorMessage 
+        };
       }
     },
 
-    async handleResetPassword(tokenReset, newPasswordReset){
+    async handleResetPassword(tokenReset, newPasswordReset) {
       try {
         const res = await axios.post('http://localhost:3000/api/auth/reset-password', {
-          token: tokenReset, // Lấy từ URL
+          token: tokenReset,
           newPassword: newPasswordReset
         });
-        // Thông báo thành công và chuyển về trang Login
+
+        return {
+          success: true,
+          message: res.data?.message || 'Your password has been successfully reset.'
+        };
+
       } catch (err) {
-        // Hiện lỗi từ server (Token hết hạn chẳng hạn)
+        const errorMessage = err.response?.data?.message || 'Failed to reset password. Please try again.';
+        
+        return {
+          success: false,
+          message: errorMessage
+        };
       }
     },
 
+    async verifyResetToken(token) {
+      try {
+        const res = await axios.get(`http://localhost:3000/api/auth/check-token?token=${token}`);
+        return { valid: true };
+      } catch (err) {
+        return { 
+          valid: false, 
+          message: err.response?.data?.message || 'Invalid or expired token.' 
+        };
+      }
+    },
   }
 });

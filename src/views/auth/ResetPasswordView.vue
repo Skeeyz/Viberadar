@@ -72,23 +72,31 @@ const confirmPassword = ref('');
 const showPassword = ref(false);
 const isLoading = ref(false);
 
-// Lấy token từ URL (?token=xxxx)
 const token = route.query.token;
 
-// Kiểm tra khớp mật khẩu
 const isMatch = computed(() => {
   if (!confirmPassword.value) return true;
   return newPassword.value === confirmPassword.value;
 });
 
-onMounted(() => {
+onMounted(async () => {  
   if (!token) {
-    Swal.fire({
+    router.replace({ name: 'NotFound' });
+    return;
+  }
+
+  const result = await authStore.verifyResetToken(token);
+  
+  if (result.valid) {
+    isValid.value = true;
+  } else {
+    await Swal.fire({
       icon: 'error',
-      title: 'Invalid Access',
-      text: 'No reset token found. Please request a new link.',
+      title: 'Invalid Link',
+      text: result.message,
       background: '#0f172a',
-      color: '#fff'
+      color: '#fff',
+      confirmButtonText: 'Request new link'
     });
     router.push('/auth/forgot-password');
   }
@@ -99,24 +107,33 @@ const handleReset = async () => {
 
   isLoading.value = true;
   try {
-    console.log("Token nhận được:", token);
-    // Gọi hàm resetPassword trong authStore (Bạn cần định nghĩa hàm này)
-    const success = await authStore.handleResetPassword(token, newPassword.value);
-    
-    if (success) {
-      Swal.fire({
+    const result = await authStore.handleResetPassword(token, newPassword.value);
+
+    if (result && result.success) {
+      await Swal.fire({
         icon: 'success',
         title: 'Success!',
-        text: 'Your password has been reset successfully.',
-        timer: 3000,
-        showConfirmButton: false,
+        text: result.message,
         background: '#0f172a',
-        color: '#fff'
+        color: '#fff',
+        confirmButtonColor: '#06b6d4',
+        timer: 3000,
+        timerProgressBar: true
       });
+      
       router.push('/auth/signin');
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Reset Failed',
+        text: result?.message || 'Something went wrong.',
+        background: '#0f172a',
+        color: '#fff',
+        confirmButtonColor: '#06b6d4'
+      });
     }
   } catch (error) {
-    console.error("Reset failed:", error);
+    console.error("Reset Password View Error:", error);
   } finally {
     isLoading.value = false;
   }

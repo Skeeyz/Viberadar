@@ -234,24 +234,95 @@ const updateProfile = async () => {
   if (!isNameChanged.value || errors.value.name) return;
   isSaving.value = true;
   try {
-    await profileStore.updateProfileName(formData.value.name);
-    if (authStore.user) authStore.user.name = formData.value.name;
-    showToast('Profile Updated!');
+    const result = await profileStore.updateProfileName(formData.value.name.trim());
+
+    if (result.success) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+        background: '#0f172a',
+        color: '#fff',
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      Toast.fire({
+        icon: 'success',
+        title: result.message
+      });
+      if (authStore.user) authStore.user.name = formData.value.name.trim();
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: result.message,
+        background: '#0f172a',
+        color: '#fff',
+        confirmButtonColor: '#22d3ee'
+      });
+    }
   } catch (error) {
-    Swal.fire({ icon: 'error', title: 'Error', text: 'Update failed!', background: '#0f172a', color: '#fff' });
-  } finally { isSaving.value = false; }
+    console.error("Critical Error:", error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Something went wrong. Please check your connection!',
+      background: '#0f172a',
+      color: '#fff'
+    });
+  } finally {
+    isSaving.value = false;
+  }
 };
 
 const handleUpdatePassword = async () => {
   if (!canUpdatePassword.value) return;
+  
   isSavingPassword.value = true;
+  
   try {
-    await profileStore.changePassword(passwordData.value.currentPassword, passwordData.value.newPassword);
-    showToast('Password Changed!');
-    passwordData.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
-  } catch (error) {
-    Swal.fire({ icon: 'error', title: 'Error', text: 'Incorrect password!', background: '#0f172a', color: '#fff' });
-  } finally { isSavingPassword.value = false; }
+    const result = await profileStore.changePassword(
+      passwordData.value.currentPassword, 
+      passwordData.value.newPassword
+    );
+
+    if (result.success) {
+      showToast(result.message);
+      passwordData.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    } else {
+      Swal.fire({ 
+        icon: 'error', 
+        title: 'Update Failed', 
+        text: result.message,
+        background: '#0f172a', 
+        color: '#fff',
+        confirmButtonColor: '#22d3ee'
+      });
+
+      if (result.status === 401) {
+        authStore.logout(); 
+        router.push('/login');
+      }
+    }
+  } catch (fatalError) {
+    console.error("Fatal:", fatalError);
+  } finally {
+    isSavingPassword.value = false;
+  }
 };
 
 const showToast = (title: string) => {
@@ -259,6 +330,10 @@ const showToast = (title: string) => {
 };
 
 onMounted(() => {
+   window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
   favoriteStore.fetchFavorites();
   watchlistStore.fetchWatchlist();
 });

@@ -1,6 +1,5 @@
 <template>
   <div class="movie-page">
-    <!-- <AppNavbar  /> -->
     <div v-if="loading" class="state-msg">Loading...</div>
     <div v-else-if="error" class="state-msg error">{{ error }}</div>
     <template v-else>
@@ -48,6 +47,10 @@ export default {
     }
   },
   async created() {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
     try {
       const id   = this.$route.params.id
       const type = this.$route.query.type || 'movie'  // ← đọc type từ URL
