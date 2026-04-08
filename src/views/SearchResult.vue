@@ -1,5 +1,4 @@
 <template>
-  <MainLayout>
     <div class="search-result-page">
 
       <!-- Header -->
@@ -90,17 +89,15 @@
       </template>
 
     </div>
-  </MainLayout>
 </template>
 
 <script>
-import MainLayout       from '../layouts/MainLayout.vue'
 import MovieCard        from '../components/MovieCard.vue'
 import { searchMovies, searchTVShows } from '../services/movieService'
 
 export default {
   name: 'SearchResult',
-  components: { MainLayout, MovieCard },
+  components: { MovieCard },
 
   data() {
     return {

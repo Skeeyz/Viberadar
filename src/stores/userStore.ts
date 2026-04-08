@@ -125,7 +125,7 @@ export const useWatchlistStore = defineStore('watchlist', () => {
     }
     const exists = watchlist.value.find(m => m.id === movie.id)
     const index = watchlist.value.findIndex(m => m.id === movie.id);
-    const oldFavorites = [...watchlist.value];
+    const oldWatchlist = [...watchlist.value];
     const isRemoving = index > -1;
     if (isRemoving){
         const confirmResult = await Swal.fire({
@@ -165,7 +165,7 @@ export const useWatchlistStore = defineStore('watchlist', () => {
             title: isRemoving ? 'Removed from your watchlist!' : 'Added to your watchlist!'
         });
     } catch (error) {
-        watchlist.value = oldFavorites;
+        watchlist.value = oldWatchlist;
         Swal.fire('Lỗi', 'We couldn\'t complete this action. Please try again!', 'error');
     }
   }
