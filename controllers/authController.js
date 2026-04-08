@@ -85,28 +85,50 @@ export const googleLogin = async (req, res) => {
 export const getProfile = async (req, res) => {
   try {
     const [rows] = await db.query('SELECT id, name, email, avatar FROM users WHERE id = ?', [req.userId]);
-    if (rows.length === 0) return res.status(404).json({ message: 'User không tồn tại' });
+    if (rows.length === 0) return res.status(404).json({ message: 'User Not Found' });
     res.json({ user: rows[0] });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi server' });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 export const changePassword = async (req, res) => {
   const { password, newPassword } = req.body;
-  const userId = req.user.id;
+  const userId = req.user?.id;
+
   try {
+    if (!password || !newPassword) {
+      return res.status(400).json({ message: 'Current and new passwords are required.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters long.' });
+    }
     const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
-    if (rows.length === 0) return res.status(401).json({ message: 'Tài khoản không tồn tại!' });
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
 
     const user = rows[0];
+
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: 'Mật khẩu hiện tại không chính xác!' });
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect.' });
+    }
+
+    const isSame = await bcrypt.compare(newPassword, user.password);
+    if (isSame) {
+      return res.status(400).json({ message: 'New password cannot be the same as the current one.' });
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
-    res.status(201).json({message: 'Thay đổi mật khẩu thành công!'});
+    await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+
+    return res.status(200).json({ message: 'Password updated successfully.' });
+
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi server!' });
+    console.error('Change Password Error:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
   }
 };
 
@@ -182,3 +204,30 @@ export const resetPassword = async (req, res) => {
   }
 };
 
+export const checkResetToken = async (req, res) => {
+  const { token } = req.query;
+
+  try {
+    if (!token) {
+      return res.status(400).json({ valid: false, message: 'Token is required' });
+    }
+
+    const email = await redisClient.get(`reset:${token}`);
+
+    if (!email) {
+      return res.status(400).json({ 
+        valid: false, 
+        message: 'This reset link has expired or is invalid.' 
+      });
+    }
+
+    res.status(200).json({ 
+      valid: true, 
+      message: 'Token is valid' 
+    });
+
+  } catch (error) {
+    console.error('Check Token Error:', error);
+    res.status(500).json({ valid: false, message: 'Server error' });
+  }
+};

@@ -186,10 +186,17 @@ export const toggleWatchlist = async (req, res) => {
 };
 
 export const updateProfileName = async (req, res) => {
-  const {newUserName} = req.body;
-  const userId = req.user.id;
+  const { newUserName } = req.body;
+  const userId = req.user?.id;
 
   try {
+    if (!newUserName || newUserName.trim() === '') {
+      return res.status(400).json({ 
+        message: "Username cannot be empty.", 
+        status: 'error' 
+      });
+    }
+
     const [existing] = await db.execute(
       'SELECT id FROM users WHERE id = ?',
       [userId]
@@ -200,13 +207,22 @@ export const updateProfileName = async (req, res) => {
         'UPDATE users SET name = ? WHERE id = ?', 
         [newUserName, userId]
       );
-      return res.json({ message: "Đã cập nhật tên người dùng", status: 'updated' });
+      
+      return res.status(200).json({ 
+        message: "Profile name updated successfully.", 
+        status: 'updated' 
+      });
     } else {
-      return res.json({ message: "Tài khoản không tồn tại trong hệ thống", status: 'updated' });
+      return res.status(404).json({ 
+        message: "User account not found in the system.", 
+        status: 'error' 
+      });
     }
   } catch (error) {
-    console.error("Lỗi updateProfileName:", error);
-    res.status(500).json({ message: "Lỗi xử lý cập nhật hồ sơ người dùng" });
+    console.error("Error in updateProfileName:", error);
+    res.status(500).json({ 
+      message: "Internal server error while updating profile." 
+    });
   }
 };
 
