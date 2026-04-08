@@ -465,8 +465,8 @@ const onFilterReset = () => {
 .movie-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Tự động chia cột mượt hơn */
-  gap: 1.5rem;
-  padding: 1.5rem 0;
+  gap: 1rem;
+  padding: 1rem 0;
 }
 
 /* --- RECOMMENDED TABS (KÍNH MỜ LIGHT) --- */
