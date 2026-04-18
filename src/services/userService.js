@@ -17,10 +17,10 @@ api.interceptors.request.use((config) => {
 });
 
 export const userService = {
-  async getProfile() {
-    const response = await api.get('/auth/profile');
-    return response.data;
-  },
+  // async getProfile() {
+  //   const response = await api.get('/auth/profile');
+  //   return response.data;
+  // },
 
   // 2. Lấy danh sách phim yêu thích (đổ vào FavoriteView)
   async getFavorites() {

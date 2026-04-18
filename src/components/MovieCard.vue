@@ -5,6 +5,9 @@
           :src="movie.poster"
           :alt="movie.title"
           class="poster-image"
+          loading="lazy"
+          width="500"
+          height="750"
         />
         <div class="overlay">
           <button class="play-button" @click.stop="handleTrailerClick">

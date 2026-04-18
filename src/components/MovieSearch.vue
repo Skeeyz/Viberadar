@@ -83,7 +83,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { searchMovies, searchTVShows } from '@/services/movieService'  // ← thêm searchTVShows
-
+import {useDebounce} from '@/composables/useDebounce'
 const router      = useRouter()
 const wrapperRef  = ref(null)
 const dropdownRef = ref(null)
@@ -101,7 +101,7 @@ const searching    = ref(false)
 const searchError  = ref(false)
 const showResults  = ref(false)
 
-let debounceTimer = null
+const debouncedFetch = useDebounce(fetchLiveResults, 350)
 
 const selectedLabel = computed(
   () => options.find(o => o.value === selected.value)?.label ?? 'TV Show'
@@ -117,16 +117,13 @@ function fetchByType(q, page = 1) {
 }
 
 function onInput() {
-  clearTimeout(debounceTimer)
   searchError.value = false
-
   if (!query.value.trim()) {
     showResults.value = false
     results.value     = []
     return
   }
-
-  debounceTimer = setTimeout(() => fetchLiveResults(), 350)
+  debouncedFetch()
 }
 
 async function fetchLiveResults() {
@@ -150,7 +147,7 @@ function goToDetail(movie) {
   router.push({ 
     name: 'MovieDetail', 
     params: { id: movie.id },
-    query: { type: selected.value }   // ← thêm type vào query
+    query: { type: selected.value }   // thêm type vào query
   })
 }
 

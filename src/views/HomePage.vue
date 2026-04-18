@@ -20,12 +20,11 @@
           <span class="stat-label">Hiển thị theo sao</span>
         </div>
         <FilterPanel
-  :genres="genres"
-  :year-options="yearOptions"
-  :ratings="ratings"
-  @apply="handleApplyFilters"
-  @reset="handleResetFilters"
-/>
+          :genres="genres"
+          :year-options="yearOptions"
+          :ratings="ratings"
+          @apply="handleApplyFilters"
+          @reset="handleResetFilters"/>
 
       </div>
     </section>
