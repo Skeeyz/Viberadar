@@ -24,6 +24,11 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 ```sh
 npm install
 ```
+## Create file Environtment: .env
+```sh
+VITE_TMDB_KEY=<YOUR TMDB KEY>
+VITE_GOOGLE_CLIENT_ID=<YOUR GOOGLE CLIENT ID>
+```
 
 ### Compile and Hot-Reload for Development
 
