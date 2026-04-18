@@ -1,5 +1,5 @@
 ## Create file .env:
-sh```
+```sh
 PORT=3000
 DB_HOST=localhost
 DB_USER=root
