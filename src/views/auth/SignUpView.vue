@@ -65,6 +65,7 @@ import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
 import SocialButtons from '@/components/auth/SocialButtons.vue';
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -141,7 +142,7 @@ const handleSocialLogin = (platform) => {
     authStore.loading = true;
 
     window.google.accounts.id.initialize({
-      client_id: "646063209072-qdlcsk4hacgbsvs8okibdgquieoc3rn1.apps.googleusercontent.com",
+      client_id: GOOGLE_CLIENT_ID,
       callback: handleGoogleResponse,
       ux_mode: "popup",
       use_fedcm_for_prompt: true
